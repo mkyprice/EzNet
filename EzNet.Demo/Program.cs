@@ -16,49 +16,33 @@ class Program
 		using var client = new TcpClient();
 		client.Connect(endpoint);
 		
-		client.RegisterMessageHandler<DemoPacket>((p, c) =>
+		// client.RegisterMessageHandler<DemoPacket>((p, c) =>
+		// {
+		// 	Console.WriteLine(p.ToString());
+		// });
+		//
+		// client.RegisterMessageHandler<TestPacket>((p, c) =>
+		// {
+		// 	Console.WriteLine(p.ToString());
+		// });
+		
+		server.RegisterResponseHandler<DemoPacket, TestPacket>((packet) =>
 		{
-			Console.WriteLine(p.ToString());
+			Console.WriteLine("Server received {0}", packet);
+			return new TestPacket(packet.Text, 111);
 		});
 
-		List<Task> tasks = new List<Task>();
-		tasks.Add(SendPacketsLoop(server));
-		// tasks.Add(ReadPacketsLoop(client));
-
-		await Task.WhenAll(tasks.ToArray());
-
-
-		await Task.Delay(1000);
-	}
-
-	static async Task SendPacketsLoop(TcpServer server)
-	{
-		int i = 100;
-		while (i > 0)
+		// client.Send(new DemoPacket("test"));
+		for (int i = 0; i < 100; i++)
 		{
-			i--;
-			server.Broadcast(new DemoPacket(i.ToString()));
-			// await Task.Delay(1);
+			TestPacket packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"));
+			Console.WriteLine("Send async result: {0}", packet);
 		}
-		Console.WriteLine("Finished sending");
+		
+		// List<Task> tasks = new List<Task>();
+		// tasks.Add(SendPacketsLoop(server));
+		// // tasks.Add(ReadPacketsLoop(client));
+		//
+		// await Task.WhenAll(tasks.ToArray());
 	}
-
-	// static async Task ReadPacketsLoop(TcpClient client)
-	// {
-	// 	while (true)
-	// 	{
-	// 		BasePacket packet;
-	// 		if (client.TryDequeue(out packet))
-	// 		{
-	// 			DemoPacket d = (DemoPacket)packet;
-	// 			Console.WriteLine(d.ToString());
-	// 		}
-	//
-	// 		if (Console.KeyAvailable)
-	// 		{
-	// 			var key = Console.ReadKey().Key;
-	// 			if (key == ConsoleKey.Q) break;
-	// 		}
-	// 	}
-	// }
 }

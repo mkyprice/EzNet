@@ -8,7 +8,7 @@ namespace EzNet.Messaging
 	public static class PacketSerializerExtension
 	{
 		public static IEnumerable<Type> AssemblyPacketTypes => _keyToPacket.Values;
-		private static readonly Dictionary<int, Type> _keyToPacket = new Dictionary<int, Type>();
+		private static readonly Dictionary<string, Type> _keyToPacket = new Dictionary<string, Type>();
 		private static bool IsInitialized = false;
 		public static void Init()
 		{
@@ -34,6 +34,7 @@ namespace EzNet.Messaging
 						if (can_create)
 						{
 							_keyToPacket[GetKey(type)] = type;
+							Log.Info("Cached packet type {0}", type);
 						}
 						else if (type.IsAbstract == false)
 						{
@@ -46,19 +47,34 @@ namespace EzNet.Messaging
 
 		public static byte[] Serialize<T>(T packet) where T : BasePacket
 		{
-			Type type = typeof(T);
-			int key = GetKey(type);
+			Type type = packet.GetType();
+			string key = GetKey(type);
 			using Stream ms = new MemoryStream();
-			ms.Write((int)key);
+			ms.Write(key);
 			packet.Write(ms);
 			byte[] bytes = ms.ToBytes(0, (int)ms.Length);
 			return bytes;
 		}
 
-		public static Type GetPacketType(Stream stream)
+		public static Type ReadPacketType(Stream stream)
 		{
-			int key = stream.ReadInt();
+			string key = stream.ReadString();
 			return _keyToPacket[key];
+		}
+
+		public static BasePacket Deserialize(Stream stream)
+		{
+			string key = stream.ReadString();
+			if (_keyToPacket.TryGetValue(key, out Type type))
+			{
+				BasePacket packet = (BasePacket)Activator.CreateInstance(type);
+				if (packet != null)
+				{
+					packet.Read(stream);
+					return packet;
+				}
+			}
+			return null;
 		}
 
 		public static IEnumerable<BasePacket> Deserialize(ArraySegment<byte> seg)
@@ -67,19 +83,14 @@ namespace EzNet.Messaging
 			using var ms = new MemoryStream(bytes);
 			while (ms.Position + sizeof(int) < ms.Length)
 			{
-				int key = ms.ReadInt();
-				if (_keyToPacket.TryGetValue(key, out Type type))
+				BasePacket? packet = Deserialize(ms);
+				if (packet != null)
 				{
-					BasePacket packet = (BasePacket)Activator.CreateInstance(type);
-					if (packet != null)
-					{
-						packet.Read(ms);
-						yield return packet;
-					}
+					yield return packet;
 				}
 			}
 		}
 
-		private static int GetKey(Type type) => type.Name.GetHashCode();
+		private static string GetKey(Type type) => type.Name;
 	}
 }

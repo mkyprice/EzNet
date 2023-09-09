@@ -5,31 +5,74 @@ namespace EzNet.Messaging
 {
 	public interface IMessageTypeHandler
 	{
-		public void ReadPacket(Stream stream);
+		public void ReadPacket(Stream stream, object args);
+		public void Update();
 	}
 	
 	public class MessageTypeHandler<T> : IMessageTypeHandler
 		where T : BasePacket, new()
 	{
+		private Action<MessageNotification<T>> _callback;
 		public int Count => _receivePacketQueue.Count;
-		private Action<T> _callback = null;
-		private readonly ConcurrentQueue<T> _receivePacketQueue = new ConcurrentQueue<T>();
+		private readonly ConcurrentQueue<MessageNotification<T>> _receivePacketQueue = new ConcurrentQueue<MessageNotification<T>>();
 
-		public bool TryDequeue(out T packet) => _receivePacketQueue.TryDequeue(out packet);
-		public bool TryPeek(out T packet) => _receivePacketQueue.TryPeek(out packet);
-
-		public void AddCallback(Action<T> callback) => _callback += callback;
-		public void RemoveCallback(Action<T> callback)
+		public void AddCallback(Action<MessageNotification<T>> callback)
 		{
-			if (_callback != null) _callback -= callback;
+			if (_callback == null)
+			{
+				_callback = callback;
+			}
+			else
+			{
+				_callback += callback;
+			}
+		}
+
+		public void RemoveCallback(Action<MessageNotification<T>> callback)
+		{
+			if (_callback != null)
+			{
+				_callback -= callback;
+			}
+		}
+
+		public void Update()
+		{
+			if (_callback != null && TryDequeue(out var message))
+			{
+				_callback.Invoke(message);
+			}
+		}
+
+		public bool TryDequeue(out MessageNotification<T> packet) => _receivePacketQueue.TryDequeue(out packet);
+		public bool TryPeek(out MessageNotification<T> packet) => _receivePacketQueue.TryPeek(out packet);
+
+		public async Task<MessageNotification<T>> DequeueAsync()
+		{
+			MessageNotification<T> packet;
+			while (TryDequeue(out packet) == false && Count > 0)
+			{
+				await Task.Yield();
+			}
+			return packet;
+		}
+
+		public async Task<MessageNotification<T>> PeekAsync()
+		{
+			MessageNotification<T> packet;
+			while (TryPeek(out packet) == false && Count > 0)
+			{
+				await Task.Yield();
+			}
+			return packet;
 		}
 		
-		public void ReadPacket(Stream stream)
+		public void ReadPacket(Stream stream, object args)
 		{
 			T packet = new T();
 			packet.Read(stream);
 			Log.Info("Read packet {0}", packet);
-			_receivePacketQueue.Enqueue(packet);
+			_receivePacketQueue.Enqueue(new MessageNotification<T>(packet, args));
 		}
 	}
 }

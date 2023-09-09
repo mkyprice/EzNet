@@ -8,9 +8,8 @@ namespace EzNet.Messaging
 	public abstract class BasePacket : IDisposable
 	{
 		public static Encoding Encoding = Encoding.UTF8;
-		public int Length => (int)_baseStream.Length;
 		
-		private Stream _baseStream;
+		protected Stream _baseStream;
 
 		protected abstract void Write();
 		protected abstract void Read();

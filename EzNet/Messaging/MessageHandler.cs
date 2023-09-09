@@ -1,16 +1,34 @@
 ﻿using EzNet.Logging;
+using System.Collections.Concurrent;
+
 namespace EzNet.Messaging
 {
 	public class MessageHandler : IDisposable
 	{
-		private readonly Dictionary<Type, IMessageTypeHandler> _messageHandlers = new Dictionary<Type, IMessageTypeHandler>();
+		private readonly ConcurrentDictionary<Type, IMessageTypeHandler> _messageHandlers = new ConcurrentDictionary<Type, IMessageTypeHandler>();
+		private readonly Dictionary<Type, Action<IMessageNotification>> _callbackHandlers = new Dictionary<Type, Action<IMessageNotification>>();
 
+		private Task MessageHandlerTask;
+		private bool IsDisposed = false;
 		public MessageHandler()
 		{
 			PacketSerializerExtension.Init();
+			MessageHandlerTask = Task.Run(HandleMessageLoop);
+		}
+
+		private async Task HandleMessageLoop()
+		{
+			while (IsDisposed == false)
+			{
+				foreach (IMessageTypeHandler handler in _messageHandlers.Values)
+				{
+					handler.Update();
+				}
+				await Task.Delay(1);
+			}
 		}
 		
-		public MessageTypeHandler<T> RegisterMessageHandler<T>()
+		public MessageTypeHandler<T> GetOrCreateMessageHandler<T>()
 			where T : BasePacket, new()
 		{
 			Type type = typeof(T);
@@ -22,49 +40,41 @@ namespace EzNet.Messaging
 			_messageHandlers[type] = handler;
 			return (MessageTypeHandler<T>)handler;
 		}
-
-		public void RegisterMessageCallback<T>(Action<T> callback)
-			where T : BasePacket, new()
+		
+		public void AddCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
 		{
-			RegisterMessageHandler<T>().AddCallback(callback);
+			GetOrCreateMessageHandler<T>().AddCallback(callback);
+		}
+		
+		public void RemoveCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
+		{
+			GetOrCreateMessageHandler<T>().RemoveCallback(callback);
 		}
 
 		public int Count<T>() where T : BasePacket, new()
 		{
-			return RegisterMessageHandler<T>().Count;
+			return GetOrCreateMessageHandler<T>().Count;
 		}
 
-		public T Dequeue<T>() where T : BasePacket, new()
+		public MessageNotification<T> Dequeue<T>() where T : BasePacket, new()
 		{
-			var handler = RegisterMessageHandler<T>();
-			T packet;
-			while (handler.TryDequeue(out packet) == false && handler.Count > 0)
-			{
-				
-			}
-			return packet;
+			return GetOrCreateMessageHandler<T>().DequeueAsync().Result;
 		}
 
-		public T Peek<T>() where T : BasePacket, new()
+		public MessageNotification<T> Peek<T>() where T : BasePacket, new()
 		{
-			var handler = RegisterMessageHandler<T>();
-			T packet;
-			while (handler.TryPeek(out packet) == false && handler.Count > 0)
-			{
-				
-			}
-			return packet;
+			return GetOrCreateMessageHandler<T>().PeekAsync().Result;
 		}
 
-		internal void ReadPackets(byte[] packetBytes, int length)
+		internal void ReadPackets(byte[] packetBytes, int length, object args)
 		{
 			using var ms = new MemoryStream(packetBytes, 0, length);
 			while (ms.Position < ms.Length)
 			{
-				Type type = PacketSerializerExtension.GetPacketType(ms);
+				Type type = PacketSerializerExtension.ReadPacketType(ms);
 				if (_messageHandlers.TryGetValue(type, out var handler))
 				{
-					handler.ReadPacket(ms);
+					handler.ReadPacket(ms, args);
 				}
 				else
 				{
@@ -74,7 +84,9 @@ namespace EzNet.Messaging
 		}
 		public void Dispose()
 		{
-			
+			if (IsDisposed) return;
+			//TODO: Dispose
+			IsDisposed = true;
 		}
 	}
 }

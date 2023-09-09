@@ -1,5 +1,6 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging;
+using EzNet.Messaging.Requests;
 using System.Net;
 using System.Net.Sockets;
 
@@ -7,8 +8,15 @@ namespace EzNet.Tcp
 {
 	public class TcpServer : IDisposable
 	{
+		public readonly MessageHandler MessageHandler = new MessageHandler();
+		protected readonly RequestHandler RequestHandler;
 		private readonly List<TcpPeer> _connections = new List<TcpPeer>();
 		private readonly Socket Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+		public TcpServer()
+		{
+			RequestHandler = new RequestHandler(MessageHandler);
+		}
 
 		public void Listen(EndPoint endPoint)
 		{
@@ -17,22 +25,27 @@ namespace EzNet.Tcp
 
 			Listener.BeginAccept(OnConnection, Listener);
 		}
+		
+		public void RegisterResponseHandler<TPacket, TResponse>(Func<TPacket, TResponse> callback) 
+			where TPacket : BasePacket, new()
+			where TResponse : BasePacket, new()
+		{
+			RequestHandler.RegisterRequest(callback);
+		}
 
 		public void Broadcast<T>(T packet)
 			where T : BasePacket
 		{
-			byte[] bytes = PacketSerializerExtension.Serialize(packet);
-			Console.WriteLine("Sending {0} bytes", bytes.Length);
 			foreach (TcpPeer connection in _connections)
 			{
-				connection.Send(bytes);
+				connection.Send(packet); // TODO: send raw byte[] method
 			}
 		}
 
 		private void OnConnection(IAsyncResult result)
 		{
 			Socket socket = ((Socket)result.AsyncState).EndAccept(result);
-			TcpPeer connection = new TcpPeer(socket, this);
+			TcpPeer connection = new TcpPeer(socket, this, MessageHandler, RequestHandler);
 			_connections.Add(connection);
 			
 			Listener.BeginAccept(OnConnection, Listener);
@@ -49,7 +62,7 @@ namespace EzNet.Tcp
 		
 		public void Dispose()
 		{
-			foreach (TcpRawConnection connection in _connections)
+			foreach (RawTcpConnection connection in _connections)
 			{
 				connection.Dispose();
 			}

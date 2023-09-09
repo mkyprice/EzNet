@@ -69,6 +69,7 @@ namespace EzNet.Logging
 			}
 
 			Console.WriteLine(msg);
+			Console.ResetColor();
 		}
 	}
 }

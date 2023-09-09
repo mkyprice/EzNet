@@ -6,9 +6,11 @@ using System.Net.Sockets;
 
 namespace EzNet.Tcp
 {
-	public abstract class TcpRawConnection : Connection, IDisposable
+	public abstract class RawTcpConnection : IDisposable
 	{
-		public override bool IsConnected => _connection.Connected;
+		public bool IsConnected => _connection.Connected;
+		
+		protected bool IsDisposed { get; private set; }
 
 		private static readonly int MEGABYTE = 1048576;
 		private static readonly int BUFFER_SIZE = MEGABYTE;
@@ -18,13 +20,13 @@ namespace EzNet.Tcp
 
 		private readonly ConcurrentQueue<byte[]> _receiveQueue = new ConcurrentQueue<byte[]>();
 
-		public TcpRawConnection()
+		public RawTcpConnection()
 		{
 			PacketSerializerExtension.Init();
 			_connection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		}
 
-		public TcpRawConnection(Socket socket)
+		public RawTcpConnection(Socket socket)
 		{
 			_connection = socket;
 			
@@ -34,7 +36,7 @@ namespace EzNet.Tcp
 			}
 		}
 
-		protected override bool TryDequeuePacket(out byte[] packet) => _receiveQueue.TryDequeue(out packet);
+		protected bool TryDequeuePacket(out byte[] packet) => _receiveQueue.TryDequeue(out packet);
 		
 		public bool Send(byte[] bytes)
 		{
@@ -103,7 +105,7 @@ namespace EzNet.Tcp
 				Shutdown();
 				return;
 			}
-			Log.Info("Received {0} bytes", received);
+			Log.Info("{0} received {1} bytes", this, received);
 			byte[] packet = new byte[received];
 			Buffer.BlockCopy(_receiveBuffer, 0, packet, 0, packet.Length);
 			_receiveQueue.Enqueue(packet);
@@ -122,6 +124,9 @@ namespace EzNet.Tcp
 		
 		public virtual void Dispose()
 		{
+			if (IsDisposed) return;
+			
+			IsDisposed = true;
 			Shutdown();
 			_connection.Dispose();
 		}
