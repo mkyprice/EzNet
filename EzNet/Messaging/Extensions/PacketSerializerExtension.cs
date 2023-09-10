@@ -8,7 +8,7 @@ namespace EzNet.Messaging
 	public static class PacketSerializerExtension
 	{
 		public static IEnumerable<Type> AssemblyPacketTypes => _keyToPacket.Values;
-		private static readonly Dictionary<string, Type> _keyToPacket = new Dictionary<string, Type>();
+		private static readonly Dictionary<int, Type> _keyToPacket = new Dictionary<int, Type>();
 		private static bool IsInitialized = false;
 		public static void Init()
 		{
@@ -45,27 +45,17 @@ namespace EzNet.Messaging
 			}
 		}
 
-		public static byte[] Serialize<T>(T packet) where T : BasePacket
+		public static void Serialize<T>(Stream stream, T packet) 
+			where T : BasePacket
 		{
 			Type type = packet.GetType();
-			string key = GetKey(type);
-			using Stream ms = new MemoryStream();
-			ms.Write(key);
-			packet.Write(ms);
-			byte[] bytes = ms.ToBytes(0, (int)ms.Length);
-			return bytes;
-		}
-
-		public static Type ReadPacketType(Stream stream)
-		{
-			string key = stream.ReadString();
-			return _keyToPacket[key];
+			WriteType(stream, type);
+			packet.Write(stream);
 		}
 
 		public static BasePacket Deserialize(Stream stream)
 		{
-			string key = stream.ReadString();
-			if (_keyToPacket.TryGetValue(key, out Type type))
+			if (TryReadType(stream, out Type type))
 			{
 				BasePacket packet = (BasePacket)Activator.CreateInstance(type);
 				if (packet != null)
@@ -91,6 +81,9 @@ namespace EzNet.Messaging
 			}
 		}
 
-		private static string GetKey(Type type) => type.Name;
+
+		public static bool TryReadType(Stream stream, out Type type) => _keyToPacket.TryGetValue(stream.ReadInt(), out type);
+		private static void WriteType(Stream stream, in Type type) => stream.Write(GetKey(type));
+		private static int GetKey(in Type type) => type.Name.GetHashCode();
 	}
 }

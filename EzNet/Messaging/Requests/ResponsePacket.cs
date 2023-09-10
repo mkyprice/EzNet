@@ -15,8 +15,7 @@
 		protected override void Write()
 		{
 			Write(RequestId);
-			byte[] bytes = PacketSerializerExtension.Serialize(Packet);
-			Write(bytes);
+			PacketSerializerExtension.Serialize(_baseStream, Packet);
 		}
 		protected override void Read()
 		{

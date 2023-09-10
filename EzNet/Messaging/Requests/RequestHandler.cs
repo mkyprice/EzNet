@@ -32,19 +32,31 @@ namespace EzNet.Messaging.Requests
 			where TRequest : BasePacket, new()
 			where TResponse : BasePacket, new()
 		{
+			// Build request packet
 			RequestPacket requestPacket = new RequestPacket(request);
+			
 			// Receiving
 			TaskCompletionSource<TResponse> taskCompletionSource = new TaskCompletionSource<TResponse>();
-			
 			void ReceiveResponse(MessageNotification<ResponsePacket> response)
 			{
+				// Ensure matching IDs
 				if (response.Message.RequestId == requestPacket.RequestId)
 				{
-					taskCompletionSource.SetResult((TResponse)response.Message.Packet);
+					if (response.Message.Packet is TResponse r)
+					{
+						taskCompletionSource.SetResult(r);
+					}
+					else
+					{
+						Log.Error("Received incorrect response type {0}", response.Message.Packet);
+						taskCompletionSource.SetCanceled();
+					}
 				}
 			}
-			
+			// Register response
 			MessageHandler.AddCallback<ResponsePacket>(ReceiveResponse);
+			
+			// Send out request
 			sendFunc(requestPacket);
 			
 			// Timeout loop
@@ -60,8 +72,10 @@ namespace EzNet.Messaging.Requests
 				}
 			}
 			
-			var result = await taskCompletionSource.Task;
+			// Await the result
+			TResponse result = await taskCompletionSource.Task;
 			
+			// Cleanup
 			MessageHandler.RemoveCallback<ResponsePacket>(ReceiveResponse);
 			return result;
 		}

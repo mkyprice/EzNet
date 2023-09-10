@@ -18,8 +18,6 @@ namespace EzNet.Tcp
 		private readonly Socket _connection;
 		private readonly byte[] _receiveBuffer = new byte[BUFFER_SIZE];
 
-		private readonly ConcurrentQueue<byte[]> _receiveQueue = new ConcurrentQueue<byte[]>();
-
 		public RawTcpConnection()
 		{
 			PacketSerializerExtension.Init();
@@ -35,22 +33,20 @@ namespace EzNet.Tcp
 				_connection.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, OnBytesReceived, _connection);
 			}
 		}
-
-		protected bool TryDequeuePacket(out byte[] packet) => _receiveQueue.TryDequeue(out packet);
 		
 		public bool Send(byte[] bytes)
 		{
-			int total_sent = 0;
-			while (total_sent < bytes.Length)
+			int totalSent = 0;
+			while (totalSent < bytes.Length)
 			{
-				int sent = _connection.Send(bytes, total_sent, bytes.Length - total_sent, SocketFlags.None, out SocketError error);
+				int sent = _connection.Send(bytes, totalSent, bytes.Length - totalSent, SocketFlags.None, out SocketError error);
 				if (error != SocketError.Success || sent <= 0)
 				{
 					Log.Warn("{0} Failed to send {1} bytes. Reason: {2}", this, bytes.Length, error);
 					Shutdown();
 					return false;
 				}
-				total_sent += sent;
+				totalSent += sent;
 			}
 			return true;
 		}
@@ -105,13 +101,13 @@ namespace EzNet.Tcp
 				Shutdown();
 				return;
 			}
-			Log.Info("{0} received {1} bytes", this, received);
-			byte[] packet = new byte[received];
-			Buffer.BlockCopy(_receiveBuffer, 0, packet, 0, packet.Length);
-			_receiveQueue.Enqueue(packet);
+			Log.Debug("{0} received {1} bytes", this, received);
+			Receive(new ArraySegment<byte>(_receiveBuffer, 0, received));
 			_connection.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, OnBytesReceived, _connection);
 		}
 
+		protected abstract void Receive(ArraySegment<byte> bytes);
+		
 		private void Shutdown()
 		{
 			if (_connection.Connected == false)

@@ -6,7 +6,6 @@ namespace EzNet.Messaging
 	public class MessageHandler : IDisposable
 	{
 		private readonly ConcurrentDictionary<Type, IMessageTypeHandler> _messageHandlers = new ConcurrentDictionary<Type, IMessageTypeHandler>();
-		private readonly Dictionary<Type, Action<IMessageNotification>> _callbackHandlers = new Dictionary<Type, Action<IMessageNotification>>();
 
 		private Task MessageHandlerTask;
 		private bool IsDisposed = false;
@@ -56,23 +55,19 @@ namespace EzNet.Messaging
 			return GetOrCreateMessageHandler<T>().Count;
 		}
 
-		public MessageNotification<T> Dequeue<T>() where T : BasePacket, new()
+		internal void ReadPackets(ArraySegment<byte> bytes, object args)
 		{
-			return GetOrCreateMessageHandler<T>().DequeueAsync().Result;
-		}
-
-		public MessageNotification<T> Peek<T>() where T : BasePacket, new()
-		{
-			return GetOrCreateMessageHandler<T>().PeekAsync().Result;
-		}
-
-		internal void ReadPackets(byte[] packetBytes, int length, object args)
-		{
-			using var ms = new MemoryStream(packetBytes, 0, length);
+			if (bytes.Array == null)
+			{
+				Log.Warn("Cannot read packets from null buffer");
+				return;
+			}
+			
+			using var ms = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count);
 			while (ms.Position < ms.Length)
 			{
-				Type type = PacketSerializerExtension.ReadPacketType(ms);
-				if (_messageHandlers.TryGetValue(type, out var handler))
+				if (PacketSerializerExtension.TryReadType(ms, out Type type) && 
+				    _messageHandlers.TryGetValue(type, out var handler))
 				{
 					handler.ReadPacket(ms, args);
 				}

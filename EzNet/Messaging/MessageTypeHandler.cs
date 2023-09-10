@@ -44,10 +44,10 @@ namespace EzNet.Messaging
 			}
 		}
 
-		public bool TryDequeue(out MessageNotification<T> packet) => _receivePacketQueue.TryDequeue(out packet);
-		public bool TryPeek(out MessageNotification<T> packet) => _receivePacketQueue.TryPeek(out packet);
+		private bool TryDequeue(out MessageNotification<T> packet) => _receivePacketQueue.TryDequeue(out packet);
+		private bool TryPeek(out MessageNotification<T> packet) => _receivePacketQueue.TryPeek(out packet);
 
-		public async Task<MessageNotification<T>> DequeueAsync()
+		private async Task<MessageNotification<T>> DequeueAsync()
 		{
 			MessageNotification<T> packet;
 			while (TryDequeue(out packet) == false && Count > 0)
@@ -57,7 +57,7 @@ namespace EzNet.Messaging
 			return packet;
 		}
 
-		public async Task<MessageNotification<T>> PeekAsync()
+		private async Task<MessageNotification<T>> PeekAsync()
 		{
 			MessageNotification<T> packet;
 			while (TryPeek(out packet) == false && Count > 0)
@@ -71,7 +71,7 @@ namespace EzNet.Messaging
 		{
 			T packet = new T();
 			packet.Read(stream);
-			Log.Info("Read packet {0}", packet);
+			// Log.Info("Read packet {0}", packet);
 			_receivePacketQueue.Enqueue(new MessageNotification<T>(packet, args));
 		}
 	}

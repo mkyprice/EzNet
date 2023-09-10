@@ -9,13 +9,13 @@ namespace EzNet.Tcp
 	public class TcpServer : IDisposable
 	{
 		public readonly MessageHandler MessageHandler = new MessageHandler();
-		protected readonly RequestHandler RequestHandler;
-		private readonly List<TcpPeer> _connections = new List<TcpPeer>();
 		private readonly Socket Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+		private readonly RequestHandler _requestHandler;
+		private readonly List<TcpPeer> _connections = new List<TcpPeer>();
 
 		public TcpServer()
 		{
-			RequestHandler = new RequestHandler(MessageHandler);
+			_requestHandler = new RequestHandler(MessageHandler);
 		}
 
 		public void Listen(EndPoint endPoint)
@@ -25,27 +25,39 @@ namespace EzNet.Tcp
 
 			Listener.BeginAccept(OnConnection, Listener);
 		}
+
+		public void RegisterMessageHandler<TPacket>(Action<TPacket, TcpPacketConnection> callback) 
+			where TPacket : BasePacket, new()
+		{
+			MessageHandler.AddCallback<TPacket>((n) =>
+			{
+				callback?.Invoke(n.Message, (TcpPacketConnection)n.Args);
+			});
+		}
 		
 		public void RegisterResponseHandler<TPacket, TResponse>(Func<TPacket, TResponse> callback) 
 			where TPacket : BasePacket, new()
 			where TResponse : BasePacket, new()
 		{
-			RequestHandler.RegisterRequest(callback);
+			_requestHandler.RegisterRequest(callback);
 		}
 
 		public void Broadcast<T>(T packet)
 			where T : BasePacket
 		{
+			using MemoryStream ms = new MemoryStream();
+			PacketSerializerExtension.Serialize(ms, packet);
+			byte[] bytes = ms.ToArray();
 			foreach (TcpPeer connection in _connections)
 			{
-				connection.Send(packet); // TODO: send raw byte[] method
+				connection.Send(bytes);
 			}
 		}
 
 		private void OnConnection(IAsyncResult result)
 		{
 			Socket socket = ((Socket)result.AsyncState).EndAccept(result);
-			TcpPeer connection = new TcpPeer(socket, this, MessageHandler, RequestHandler);
+			TcpPeer connection = new TcpPeer(socket, this, MessageHandler, _requestHandler);
 			_connections.Add(connection);
 			
 			Listener.BeginAccept(OnConnection, Listener);
