@@ -23,7 +23,7 @@ namespace EzNet.Messaging.Requests
 				{
 					TResponse response = requestFunc(request);
 					ResponsePacket responsePacket = new ResponsePacket(response, notification.Message.RequestId);
-					((TcpPacketConnection)notification.Args).Send(responsePacket);
+					((PacketConnection)notification.Source).Send(responsePacket);
 				}
 			});
 		}

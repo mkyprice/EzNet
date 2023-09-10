@@ -5,7 +5,7 @@ namespace EzNet.Messaging
 {
 	public interface IMessageTypeHandler
 	{
-		public void ReadPacket(Stream stream, object args);
+		public void ReadPacket(Stream stream, PacketConnection source);
 		public void Update();
 	}
 	
@@ -67,12 +67,12 @@ namespace EzNet.Messaging
 			return packet;
 		}
 		
-		public void ReadPacket(Stream stream, object args)
+		public void ReadPacket(Stream stream, PacketConnection source)
 		{
 			T packet = new T();
 			packet.Read(stream);
 			// Log.Info("Read packet {0}", packet);
-			_receivePacketQueue.Enqueue(new MessageNotification<T>(packet, args));
+			_receivePacketQueue.Enqueue(new MessageNotification<T>(packet, source));
 		}
 	}
 }

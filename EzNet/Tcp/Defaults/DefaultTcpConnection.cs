@@ -6,9 +6,10 @@ using System.Net.Sockets;
 
 namespace EzNet.Tcp
 {
-	public abstract class RawTcpConnection : IDisposable
+	public class DefaultTcpConnection : IConnection, IDisposable
 	{
 		public bool IsConnected => _connection.Connected;
+		public Action<ArraySegment<byte>> OnReceive { get; set; }
 		
 		protected bool IsDisposed { get; private set; }
 
@@ -18,13 +19,12 @@ namespace EzNet.Tcp
 		private readonly Socket _connection;
 		private readonly byte[] _receiveBuffer = new byte[BUFFER_SIZE];
 
-		public RawTcpConnection()
+		public DefaultTcpConnection()
 		{
-			PacketSerializerExtension.Init();
 			_connection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		}
 
-		public RawTcpConnection(Socket socket)
+		public DefaultTcpConnection(Socket socket)
 		{
 			_connection = socket;
 			
@@ -33,8 +33,13 @@ namespace EzNet.Tcp
 				_connection.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, OnBytesReceived, _connection);
 			}
 		}
+
+		public DefaultTcpConnection(EndPoint endPoint) : this()
+		{
+			Connect(endPoint);
+		}
 		
-		public bool Send(byte[] bytes)
+		public void Send(byte[] bytes)
 		{
 			int totalSent = 0;
 			while (totalSent < bytes.Length)
@@ -44,11 +49,10 @@ namespace EzNet.Tcp
 				{
 					Log.Warn("{0} Failed to send {1} bytes. Reason: {2}", this, bytes.Length, error);
 					Shutdown();
-					return false;
+					return;
 				}
 				totalSent += sent;
 			}
-			return true;
 		}
 		
 		public bool Connect(EndPoint endPoint)
@@ -87,6 +91,7 @@ namespace EzNet.Tcp
 		private void OnBytesReceived(IAsyncResult result)
 		{
 			Socket socket = result.AsyncState as Socket;
+			if (socket.Connected == false) return;
 
 			int received = socket.EndReceive(result, out SocketError error);
 			if (error != SocketError.Success)
@@ -102,13 +107,11 @@ namespace EzNet.Tcp
 				return;
 			}
 			Log.Debug("{0} received {1} bytes", this, received);
-			Receive(new ArraySegment<byte>(_receiveBuffer, 0, received));
+			OnReceive?.Invoke(new ArraySegment<byte>(_receiveBuffer, 0, received));
 			_connection.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, OnBytesReceived, _connection);
 		}
-
-		protected abstract void Receive(ArraySegment<byte> bytes);
 		
-		private void Shutdown()
+		public void Shutdown()
 		{
 			if (_connection.Connected == false)
 			{
@@ -116,6 +119,7 @@ namespace EzNet.Tcp
 			}
 			_connection.Shutdown(SocketShutdown.Both);
 			OnShutdown();
+			Dispose();
 		}
 		
 		public virtual void Dispose()

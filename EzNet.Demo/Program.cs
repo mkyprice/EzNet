@@ -14,30 +14,17 @@ class Program
 		using var server = new TcpServer();
 		server.Listen(endpoint);
 
-		using var client = new TcpClient();
-		client.Connect(endpoint);
+		using var client = new TcpClient(endpoint);
 
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
-		// client.RegisterMessageHandler<DemoPacket>((p, c) =>
-		// {
-		// 	Console.WriteLine(p.ToString());
-		// });
-		//
-		// client.RegisterMessageHandler<TestPacket>((p, c) =>
-		// {
-		// 	Console.WriteLine(p.ToString());
-		// });
+		
 		
 		server.RegisterResponseHandler<DemoPacket, TestPacket>((packet) =>
 		{
 			// Console.WriteLine("Server received {0}", packet);
 			return new TestPacket(packet.Text, 111);
 		});
-		
-		// client.RegisterResponseHandler((TestPacket request) => new DemoPacket("Sup"));
-
-		// client.Send(new DemoPacket("test"));
 
 		List<Task<TestPacket>> requests = new List<Task<TestPacket>>();
 		for (int i = 0; i < 100; i++)
@@ -51,12 +38,6 @@ class Program
 		{
 			Console.WriteLine("Result: {0}", result);
 		}
-
-		// List<Task> tasks = new List<Task>();
-		// tasks.Add(SendPacketsLoop(server));
-		// // tasks.Add(ReadPacketsLoop(client));
-		//
-		// await Task.WhenAll(tasks.ToArray());
 		
 		sw.Stop();
 		Console.WriteLine("Total time {0}", sw.Elapsed);

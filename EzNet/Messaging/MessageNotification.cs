@@ -8,12 +8,12 @@
 		where T : BasePacket, new()
 	{
 		public readonly T Message;
-		public readonly object Args;
+		public readonly PacketConnection Source;
 
-		public MessageNotification(T message, object args)
+		public MessageNotification(T message, PacketConnection source)
 		{
 			Message = message;
-			Args = args;
+			Source = source;
 		}
 	}
 }

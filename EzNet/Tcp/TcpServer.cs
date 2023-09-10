@@ -11,7 +11,7 @@ namespace EzNet.Tcp
 		public readonly MessageHandler MessageHandler = new MessageHandler();
 		private readonly Socket Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		private readonly RequestHandler _requestHandler;
-		private readonly List<TcpPeer> _connections = new List<TcpPeer>();
+		private readonly List<PacketConnection> _connections = new List<PacketConnection>();
 
 		public TcpServer()
 		{
@@ -26,12 +26,12 @@ namespace EzNet.Tcp
 			Listener.BeginAccept(OnConnection, Listener);
 		}
 
-		public void RegisterMessageHandler<TPacket>(Action<TPacket, TcpPacketConnection> callback) 
+		public void RegisterMessageHandler<TPacket>(Action<TPacket, PacketConnection> callback) 
 			where TPacket : BasePacket, new()
 		{
 			MessageHandler.AddCallback<TPacket>((n) =>
 			{
-				callback?.Invoke(n.Message, (TcpPacketConnection)n.Args);
+				callback?.Invoke(n.Message, (PacketConnection)n.Source);
 			});
 		}
 		
@@ -48,7 +48,7 @@ namespace EzNet.Tcp
 			using MemoryStream ms = new MemoryStream();
 			PacketSerializerExtension.Serialize(ms, packet);
 			byte[] bytes = ms.ToArray();
-			foreach (TcpPeer connection in _connections)
+			foreach (PacketConnection connection in _connections)
 			{
 				connection.Send(bytes);
 			}
@@ -57,7 +57,7 @@ namespace EzNet.Tcp
 		private void OnConnection(IAsyncResult result)
 		{
 			Socket socket = ((Socket)result.AsyncState).EndAccept(result);
-			TcpPeer connection = new TcpPeer(socket, this, MessageHandler, _requestHandler);
+			PacketConnection connection = new PacketConnection(socket, MessageHandler, _requestHandler);
 			_connections.Add(connection);
 			
 			Listener.BeginAccept(OnConnection, Listener);
@@ -74,7 +74,7 @@ namespace EzNet.Tcp
 		
 		public void Dispose()
 		{
-			foreach (RawTcpConnection connection in _connections)
+			foreach (var connection in _connections)
 			{
 				connection.Dispose();
 			}

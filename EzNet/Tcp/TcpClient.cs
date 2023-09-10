@@ -1,21 +1,26 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging;
 using EzNet.Messaging.Requests;
+using System.Net;
 
 namespace EzNet.Tcp
 {
-	public class TcpClient : TcpPacketConnection
+	public class TcpClient : PacketConnection
 	{
-		public TcpClient()
+		public TcpClient(IConnection connection) : base(connection)
 		{
 		}
 
-		public void RegisterMessageHandler<TPacket>(Action<TPacket, TcpPacketConnection> callback) 
+		public TcpClient(EndPoint endPoint) : base(new DefaultTcpConnection(endPoint))
+		{
+		}
+
+		public void RegisterMessageHandler<TPacket>(Action<TPacket, PacketConnection> callback) 
 			where TPacket : BasePacket, new()
 		{
 			MessageHandler.AddCallback<TPacket>((n) =>
 			{
-				callback?.Invoke(n.Message, this);
+				callback?.Invoke(n.Message, n.Source);
 			});
 		}
 		

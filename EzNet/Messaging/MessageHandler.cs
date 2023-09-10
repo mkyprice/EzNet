@@ -55,7 +55,7 @@ namespace EzNet.Messaging
 			return GetOrCreateMessageHandler<T>().Count;
 		}
 
-		internal void ReadPackets(ArraySegment<byte> bytes, object args)
+		internal void ReadPackets(ArraySegment<byte> bytes, PacketConnection source)
 		{
 			if (bytes.Array == null)
 			{
@@ -69,7 +69,7 @@ namespace EzNet.Messaging
 				if (PacketSerializerExtension.TryReadType(ms, out Type type) && 
 				    _messageHandlers.TryGetValue(type, out var handler))
 				{
-					handler.ReadPacket(ms, args);
+					handler.ReadPacket(ms, source);
 				}
 				else
 				{
