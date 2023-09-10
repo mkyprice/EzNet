@@ -42,6 +42,11 @@ namespace EzNet.Tcp
 		
 		public void Send(byte[] bytes)
 		{
+			if (_connection.Connected == false)
+			{
+				Log.Warn("Tried to send {0} bytes with unconnected socket", bytes.Length);
+				return;
+			}
 			int totalSent = 0;
 			while (totalSent < bytes.Length)
 			{

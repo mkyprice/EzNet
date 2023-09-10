@@ -14,7 +14,7 @@ class Program
 		server.Listen(endpoint);
 
 		using var client = new TcpClient(endpoint);
-
+		
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
 		
@@ -22,24 +22,24 @@ class Program
 		server.RegisterResponseHandler<TestPacket, TestValueClass>(ServerResponse);
 		
 		
-		var packet = await client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", 1));
+		var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo"));
 		Console.WriteLine("Received: {0}", packet);
 
-		List<Task<TestPacket>> requests = new List<Task<TestPacket>>();
-		for (int i = 0; i < 100; i++)
+		List<Task<TestValueClass>> requests = new List<Task<TestValueClass>>();
+		for (int i = 0; i < 1000; i++)
 		{
-			requests.Add(client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}")));
+			requests.Add(client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", i)));
 			// var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"));
 			// Console.WriteLine("Send async result: {0}", packet);
 		}
 		
 		var results = await Task.WhenAll(requests.ToArray());
-		foreach (TestPacket result in results)
+		
+		sw.Stop();
+		foreach (TestValueClass result in results)
 		{
 			Console.WriteLine("Result: {0}", result);
 		}
-		
-		sw.Stop();
 		Console.WriteLine("Total time {0}", sw.Elapsed);
 	}
 
@@ -51,7 +51,7 @@ class Program
 	private static TestValueClass ServerResponse(TestPacket request)
 	{
 		var test = new TestValueClass();
-		Console.WriteLine("Sending:  {0}", test);
+		// Console.WriteLine("Sending:  {0}", test);
 		return test;
 	}
 }

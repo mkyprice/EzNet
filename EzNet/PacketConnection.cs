@@ -45,12 +45,12 @@ namespace EzNet
 
 		public void Send(byte[] packetBytes) => Connection.Send(packetBytes);
 
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMS = 2000)
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMS = -1)
 			where TRequest : BasePacket, new()
 			where TResponse : BasePacket, new()
 			=> await RequestHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMS);
 
-		public void Receive(ArraySegment<byte> bytes) => MessageHandler.ReadPackets(bytes, this);
+		private void Receive(ArraySegment<byte> bytes) => MessageHandler.ReadPackets(bytes, this);
 		
 		public void Dispose()
 		{

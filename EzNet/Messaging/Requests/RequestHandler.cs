@@ -37,7 +37,7 @@ namespace EzNet.Messaging.Requests
 			});
 		}
 
-		internal async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<RequestPacket> sendFunc, int timeoutMS = 2000)
+		internal async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<RequestPacket> sendFunc, int timeoutMS = -1)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
@@ -70,19 +70,26 @@ namespace EzNet.Messaging.Requests
 			
 			// Await the result
 			TResponse response;
-			using (var cancellation = new CancellationTokenSource(timeoutMS))
+			if (timeoutMS >= 0)
 			{
-				Task task = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(timeoutMS, cancellation.Token));
-				if (task == taskCompletionSource.Task)
+				using (var cancellation = new CancellationTokenSource(timeoutMS))
 				{
-					cancellation.Cancel();
-					response = await taskCompletionSource.Task;
+					Task task = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(timeoutMS, cancellation.Token));
+					if (task == taskCompletionSource.Task)
+					{
+						cancellation.Cancel();
+						response = await taskCompletionSource.Task;
+					}
+					else
+					{
+						response = default(TResponse);
+						Log.Warn("Request {0} timed out", request);
+					}
 				}
-				else
-				{
-					response = default(TResponse);
-					Log.Warn("Request {0} timed out", request);
-				}
+			}
+			else
+			{
+				response = await taskCompletionSource.Task;
 			}
 			
 			// Cleanup
