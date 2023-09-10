@@ -1,6 +1,5 @@
 ﻿using EzNet.IO;
 using EzNet.IO.Extensions;
-using EzNet.Logging;
 using System.Text;
 
 namespace EzNet.Messaging

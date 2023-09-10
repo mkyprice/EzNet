@@ -1,6 +1,5 @@
 ﻿
 using EzNet.Demo;
-using EzNet.Messaging;
 using EzNet.Tcp;
 using System.Diagnostics;
 using System.Net;
@@ -9,7 +8,7 @@ class Program
 {
 	static async Task Main(string[] args)
 	{
-		var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 6969);
+		var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9696);
 		
 		using var server = new TcpServer();
 		server.Listen(endpoint);
@@ -29,7 +28,7 @@ class Program
 		List<Task<TestPacket>> requests = new List<Task<TestPacket>>();
 		for (int i = 0; i < 100; i++)
 		{
-			requests.Add(client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"), 2000));
+			requests.Add(client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}")));
 			// Console.WriteLine("Send async result: {0}", packet);
 		}
 		

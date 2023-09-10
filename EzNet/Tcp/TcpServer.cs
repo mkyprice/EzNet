@@ -1,5 +1,6 @@
-﻿using EzNet.Logging;
-using EzNet.Messaging;
+﻿using EzNet.Messaging;
+using EzNet.Messaging.Extensions;
+using EzNet.Messaging.Handling;
 using EzNet.Messaging.Requests;
 using System.Net;
 using System.Net.Sockets;

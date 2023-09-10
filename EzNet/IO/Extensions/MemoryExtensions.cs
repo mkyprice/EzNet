@@ -4,13 +4,21 @@ namespace EzNet.IO.Extensions
 {
 	public static class MemoryExtensions
 	{
-		public static byte[] ToBytes(this Stream stream, int offset, int size)
+		public static byte[] ToBytes(this Stream stream)
 		{
-			long position = stream.Position;
-			byte[] buffer = new byte[size];
-			stream.Position = offset;
-			stream.Read(buffer, 0, size);
-			stream.Position = position;
+			byte[] buffer;
+			if (stream is MemoryStream ms)
+			{
+				buffer = ms.ToArray();
+			}
+			else
+			{
+				long position = stream.Position;
+				buffer = new byte[stream.Length];
+				stream.Position = 0;
+				int read = stream.Read(buffer, 0, buffer.Length);
+				stream.Position = position;
+			}
 			return buffer;
 		}
 	}

@@ -4,11 +4,11 @@ using EzNet.Logging;
 using EzNet.Utils;
 using System.Reflection;
 
-namespace EzNet.Messaging
+namespace EzNet.Messaging.Extensions
 {
 	internal static class PacketExtension
 	{
-		private static readonly BidiDictionary<int, Type> _packetKeys = new BidiDictionary<int, Type>();
+		private static readonly BiDiDictionary<int, Type> _packetKeys = new BiDiDictionary<int, Type>();
 		private static bool _isInitialized = false;
 		public static void Init()
 		{

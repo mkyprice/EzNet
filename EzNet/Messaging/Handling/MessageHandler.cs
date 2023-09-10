@@ -1,7 +1,8 @@
 ﻿using EzNet.Logging;
+using EzNet.Messaging.Extensions;
 using System.Collections.Concurrent;
 
-namespace EzNet.Messaging
+namespace EzNet.Messaging.Handling
 {
 	public class MessageHandler : IDisposable
 	{

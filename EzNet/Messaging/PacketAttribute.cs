@@ -2,9 +2,16 @@
 
 namespace EzNet.Messaging
 {
+	/// <summary>
+	/// Describes a packet
+	/// This should match the packet ID on clients/servers and should always be unique
+	/// </summary>
 	[AttributeUsage(AttributeTargets.Class)]
 	public class PacketAttribute : Attribute
 	{
+		/// <summary>
+		/// Unique ID to type of packet
+		/// </summary>
 		public string Id;
 		
 		private PacketAttribute() { }

@@ -1,4 +1,4 @@
-﻿namespace EzNet.Messaging
+﻿namespace EzNet.Messaging.Handling
 {
 	public interface IMessageNotification
 	{

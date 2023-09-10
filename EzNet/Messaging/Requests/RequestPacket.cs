@@ -1,4 +1,6 @@
-﻿namespace EzNet.Messaging.Requests
+﻿using EzNet.Messaging.Extensions;
+
+namespace EzNet.Messaging.Requests
 {
 	internal class RequestPacket : BasePacket
 	{

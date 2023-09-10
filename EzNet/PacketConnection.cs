@@ -1,4 +1,6 @@
 ﻿using EzNet.Messaging;
+using EzNet.Messaging.Extensions;
+using EzNet.Messaging.Handling;
 using EzNet.Messaging.Requests;
 using EzNet.Tcp;
 using System.Net.Sockets;
@@ -10,10 +12,6 @@ namespace EzNet
 		protected readonly MessageHandler MessageHandler;
 		protected readonly RequestHandler RequestHandler;
 		protected readonly IConnection Connection;
-		
-		public PacketConnection() : this(new DefaultTcpConnection())
-		{
-		}
 
 		public PacketConnection(IConnection connection)
 		{

@@ -1,5 +1,5 @@
 ﻿using EzNet.Logging;
-using EzNet.Tcp;
+using EzNet.Messaging.Handling;
 
 namespace EzNet.Messaging.Requests
 {
@@ -17,13 +17,19 @@ namespace EzNet.Messaging.Requests
 			where TRequest : BasePacket, new()
 			where TResponse : BasePacket, new()
 		{
+			if (requestFunc == null)
+			{
+				Log.Warn("Response function<{0}, {1}> was null", typeof(TRequest).Name, typeof(TResponse).Name);
+				return;
+			}
 			MessageHandler.AddCallback<RequestPacket>((notification) =>
 			{
+				// Respond to type request
 				if (notification.Message.Packet is TRequest request)
 				{
 					TResponse response = requestFunc(request);
 					ResponsePacket responsePacket = new ResponsePacket(response, notification.Message.RequestId);
-					((PacketConnection)notification.Source).Send(responsePacket);
+					notification.Source.Send(responsePacket);
 				}
 			});
 		}

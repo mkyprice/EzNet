@@ -1,9 +1,9 @@
 ﻿namespace EzNet.Utils
 {
 	/// <summary>
-	/// A bi-directional dictionary
+	/// Bi-directional dictionary
 	/// </summary>
-	public class BidiDictionary<T1, T2>
+	public class BiDiDictionary<T1, T2>
 		where T1 : notnull
 		where T2 : notnull
 	{

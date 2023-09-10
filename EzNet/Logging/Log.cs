@@ -1,5 +1,6 @@
 ﻿using EzRPC.Logging;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace EzNet.Logging
 {
@@ -11,12 +12,12 @@ namespace EzNet.Logging
 		private static bool _isInitialized = false;
 		private static readonly Stopwatch Timer = Stopwatch.StartNew();
 
-		public static void Trace(object? msg) => WriteMessage(LOG_LEVEL.Trace, (msg ?? string.Empty).ToString());
-		public static void Debug(object? msg) => WriteMessage(LOG_LEVEL.Debug, (msg ?? string.Empty).ToString());
-		public static void Info(object? msg) => WriteMessage(LOG_LEVEL.Info, (msg ?? string.Empty).ToString());
-		public static void Warn(object? msg) => WriteMessage(LOG_LEVEL.Warn, (msg ?? string.Empty).ToString());
-		public static void Error(object? msg) => WriteMessage(LOG_LEVEL.Error, (msg ?? string.Empty).ToString());
-		public static void Fatal(object? msg) => WriteMessage(LOG_LEVEL.Fatal, (msg ?? string.Empty).ToString());
+		public static void Trace(object? msg) => WriteMessage(LOG_LEVEL.Trace, msg);
+		public static void Debug(object? msg) => WriteMessage(LOG_LEVEL.Debug, msg);
+		public static void Info(object? msg) => WriteMessage(LOG_LEVEL.Info, msg);
+		public static void Warn(object? msg) => WriteMessage(LOG_LEVEL.Warn, msg);
+		public static void Error(object? msg) => WriteMessage(LOG_LEVEL.Error, msg);
+		public static void Fatal(object? msg) => WriteMessage(LOG_LEVEL.Fatal, msg);
 		
 		public static void Trace(string message) => WriteMessage(LOG_LEVEL.Trace, message);
 		public static void Debug(string message) => WriteMessage(LOG_LEVEL.Debug, message);
@@ -25,26 +26,26 @@ namespace EzNet.Logging
 		public static void Error(string message) => WriteMessage(LOG_LEVEL.Error, message);
 		public static void Fatal(string message) => WriteMessage(LOG_LEVEL.Fatal, message);
 
-		public static void Trace(string format, params object[] args) => WriteMessage(LOG_LEVEL.Trace, string.Format(format ?? string.Empty, args));
-		public static void Debug(string format, params object[] args) => WriteMessage(LOG_LEVEL.Debug, string.Format(format ?? string.Empty, args));
-		public static void Info(string format, params object[] args) => WriteMessage(LOG_LEVEL.Info, string.Format(format ?? string.Empty, args));
-		public static void Warn(string format, params object[] args) => WriteMessage(LOG_LEVEL.Warn, string.Format(format ?? string.Empty, args));
-		public static void Error(string format, params object[] args) => WriteMessage(LOG_LEVEL.Error, string.Format(format ?? string.Empty, args));
-		public static void Fatal(string format, params object[] args) => WriteMessage(LOG_LEVEL.Fatal, string.Format(format ?? string.Empty, args));
+		public static void Trace([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Trace, string.Format(format, args));
+		public static void Debug([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Debug, string.Format(format, args));
+		public static void Info([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Info, string.Format(format, args));
+		public static void Warn([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Warn, string.Format(format, args));
+		public static void Error([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Error, string.Format(format, args));
+		public static void Fatal([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Fatal, string.Format(format, args));
 
 		public static void SetStream(TextWriter writer)
 		{
 			Writer = writer;
 		}
 
-		private static void WriteMessage(LOG_LEVEL level, string msg)
+		private static void WriteMessage(LOG_LEVEL level, object? msg)
 		{
 			if (Level == LOG_LEVEL.Off || level < Level) return;
 
-			msg = $"[{level}-{Timer.Elapsed:hh\\:mm\\:ss}] {msg}";
+			string message = $"[{level}-{Timer.Elapsed:hh\\:mm\\:ss}] {msg}";
 
 			// TODO: Turn this into a queue
-			Writer?.WriteLine(msg);
+			Writer?.WriteLine(message);
 
 			switch (level)
 			{
@@ -68,7 +69,7 @@ namespace EzNet.Logging
 					break;
 			}
 
-			Console.WriteLine(msg);
+			Console.WriteLine(message);
 			Console.ResetColor();
 		}
 	}

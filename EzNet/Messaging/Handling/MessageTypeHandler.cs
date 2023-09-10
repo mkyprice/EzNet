@@ -1,7 +1,6 @@
-﻿using EzNet.Logging;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 
-namespace EzNet.Messaging
+namespace EzNet.Messaging.Handling
 {
 	public interface IMessageTypeHandler
 	{

@@ -94,15 +94,10 @@ namespace EzNet.Tcp
 			if (socket.Connected == false) return;
 
 			int received = socket.EndReceive(result, out SocketError error);
-			if (error != SocketError.Success)
+			if (error != SocketError.Success || received == 0)
 			{
-				Log.Warn("Socket encountered error {0}", error);
-				Shutdown();
-				return;
-			}
-			if (received == 0)
-			{
-				Log.Info("Socket received zero bytes. Shutting down");
+				string message = received == 0 ? "Socket received zero bytes. Shutting down" : string.Format("Socket encountered error {0}", error);
+				Log.Warn(message);
 				Shutdown();
 				return;
 			}
