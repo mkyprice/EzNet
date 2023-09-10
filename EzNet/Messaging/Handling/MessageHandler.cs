@@ -1,6 +1,9 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging.Extensions;
+using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace EzNet.Messaging.Handling
 {

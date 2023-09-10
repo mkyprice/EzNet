@@ -3,7 +3,10 @@ using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling;
 using EzNet.Messaging.Requests;
 using EzNet.Tcp;
+using System;
+using System.IO;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace EzNet
 {
@@ -32,10 +35,12 @@ namespace EzNet
 		public void Send<T>(T packet)
 			where T : BasePacket
 		{
-			using MemoryStream ms = new MemoryStream();
-			PacketExtension.Serialize(ms, packet);
-			byte[] bytes = ms.ToArray();
-			Connection.Send(bytes);
+			using (MemoryStream ms = new MemoryStream())
+			{
+				PacketExtension.Serialize(ms, packet);
+				byte[] bytes = ms.ToArray();
+				Connection.Send(bytes);
+			}
 		}
 
 		public void Send(byte[] packetBytes) => Connection.Send(packetBytes);

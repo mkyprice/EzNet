@@ -1,4 +1,6 @@
-﻿namespace EzNet
+﻿using System;
+
+namespace EzNet
 {
 	public interface IConnection
 	{

@@ -1,6 +1,7 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging;
 using EzNet.Messaging.Requests;
+using System;
 using System.Net;
 
 namespace EzNet.Tcp

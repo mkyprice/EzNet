@@ -1,4 +1,5 @@
 ﻿using EzNet.Logging;
+using System.IO;
 
 namespace EzNet.IO.Extensions
 {

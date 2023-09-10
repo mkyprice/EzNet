@@ -1,5 +1,8 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging.Handling;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EzNet.Messaging.Requests
 {
@@ -43,18 +46,18 @@ namespace EzNet.Messaging.Requests
 			
 			// Receiving
 			TaskCompletionSource<TResponse> taskCompletionSource = new TaskCompletionSource<TResponse>();
-			void ReceiveResponse(MessageNotification<ResponsePacket> response)
+			void ReceiveResponse(MessageNotification<ResponsePacket> responsePacket)
 			{
 				// Ensure matching IDs
-				if (response.Message.RequestId == requestPacket.RequestId)
+				if (responsePacket.Message.RequestId == requestPacket.RequestId)
 				{
-					if (response.Message.Packet is TResponse r)
+					if (responsePacket.Message.Packet is TResponse r)
 					{
 						taskCompletionSource.SetResult(r);
 					}
 					else
 					{
-						Log.Error("Received incorrect response type {0}", response.Message.Packet);
+						Log.Error("Received incorrect response type {0}", responsePacket.Message.Packet);
 						taskCompletionSource.SetCanceled();
 					}
 				}

@@ -1,11 +1,11 @@
-﻿namespace EzNet.Utils
+﻿using System.Collections.Generic;
+
+namespace EzNet.Utils
 {
 	/// <summary>
 	/// Bi-directional dictionary
 	/// </summary>
 	public class BiDiDictionary<T1, T2>
-		where T1 : notnull
-		where T2 : notnull
 	{
 		private readonly Dictionary<T1, T2> _dictAB = new Dictionary<T1, T2>();
 		private readonly Dictionary<T2, T1> _dictBA = new Dictionary<T2, T1>();

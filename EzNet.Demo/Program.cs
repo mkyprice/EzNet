@@ -18,17 +18,13 @@ class Program
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
 		
-		
-		server.RegisterResponseHandler<DemoPacket, TestPacket>((packet) =>
-		{
-			// Console.WriteLine("Server received {0}", packet);
-			return new TestPacket(packet.Text, 111);
-		});
+		server.RegisterResponseHandler<DemoPacket, TestPacket>(ServerResponse);
 
 		List<Task<TestPacket>> requests = new List<Task<TestPacket>>();
 		for (int i = 0; i < 100; i++)
 		{
 			requests.Add(client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}")));
+			// var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"));
 			// Console.WriteLine("Send async result: {0}", packet);
 		}
 		
@@ -40,5 +36,10 @@ class Program
 		
 		sw.Stop();
 		Console.WriteLine("Total time {0}", sw.Elapsed);
+	}
+
+	private static TestPacket ServerResponse(DemoPacket request)
+	{
+		return new TestPacket(request.Text, Random.Shared.NextSingle());
 	}
 }

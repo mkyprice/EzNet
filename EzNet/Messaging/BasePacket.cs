@@ -1,5 +1,7 @@
 ﻿using EzNet.IO;
 using EzNet.IO.Extensions;
+using System;
+using System.IO;
 using System.Text;
 
 namespace EzNet.Messaging
@@ -40,7 +42,7 @@ namespace EzNet.Messaging
 		protected void Write(ulong value) => _baseStream.Write(value);
 		protected void Write(float value) => _baseStream.Write(value);
 		protected void Write(double value) => _baseStream.Write(value);
-		protected void Write(byte[] value) => _baseStream.Write(value);
+		protected void Write(byte[] value) => _baseStream.Write(value, 0, value.Length);
 		protected void Write(char value) => _baseStream.Write(value);
 		protected void Write(string value) => _baseStream.Write(value ?? string.Empty);
 

@@ -1,5 +1,6 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging;
+using System;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;

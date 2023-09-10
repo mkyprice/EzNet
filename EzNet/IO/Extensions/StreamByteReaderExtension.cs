@@ -1,4 +1,6 @@
 ﻿using EzNet.Messaging;
+using System;
+using System.IO;
 using System.Text;
 
 namespace EzNet.IO.Extensions
@@ -59,18 +61,16 @@ namespace EzNet.IO.Extensions
 			return (ulong)((ulong)high << 32 | low);
 		}
 		
-		public static float ReadSingle(this Stream stream)
+		public static unsafe float ReadSingle(this Stream stream)
 		{
-			return (float)(stream.ReadByte() | 
-			              stream.ReadByte() << 8 |
-			              stream.ReadByte() << 16 |
-			              stream.ReadByte() << 24
-				);
+			uint iv = stream.ReadUInt();
+			return *((float*)&iv);
 		}
 		
-		public static double ReadDouble(this Stream stream)
+		public static unsafe double ReadDouble(this Stream stream)
 		{
-			return (double)(stream.ReadLong());
+			ulong lv = stream.ReadULong();
+			return *((double*)&lv);
 		}
 		
 		public static bool ReadBool(this Stream stream)

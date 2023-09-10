@@ -1,4 +1,5 @@
 ﻿using EzNet.Messaging.Extensions;
+using System;
 
 namespace EzNet.Messaging.Requests
 {

@@ -6,11 +6,11 @@ namespace EzNet.Demo
 	public class TestPacket : BasePacket
 	{
 		public string Text;
-		public float Float;
+		public double Float;
 
 		public TestPacket() { }
 
-		public TestPacket(string t, float v)
+		public TestPacket(string t, double v)
 		{
 			Text = t;
 			Float = v;
@@ -24,7 +24,7 @@ namespace EzNet.Demo
 		protected override void Read()
 		{
 			Text = ReadString();
-			Float = ReadSingle();
+			Float = ReadDouble();
 		}
 
 		public override string ToString()

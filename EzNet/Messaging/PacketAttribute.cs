@@ -1,4 +1,5 @@
 ﻿using EzNet.Logging;
+using System;
 
 namespace EzNet.Messaging
 {

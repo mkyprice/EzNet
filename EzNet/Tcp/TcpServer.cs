@@ -2,6 +2,9 @@
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling;
 using EzNet.Messaging.Requests;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -46,12 +49,14 @@ namespace EzNet.Tcp
 		public void Broadcast<T>(T packet)
 			where T : BasePacket
 		{
-			using MemoryStream ms = new MemoryStream();
-			PacketExtension.Serialize(ms, packet);
-			byte[] bytes = ms.ToArray();
-			foreach (PacketConnection connection in _connections)
+			using (MemoryStream ms = new MemoryStream())
 			{
-				connection.Send(bytes);
+				PacketExtension.Serialize(ms, packet);
+				byte[] bytes = ms.ToArray();
+				foreach (PacketConnection connection in _connections)
+				{
+					connection.Send(bytes);
+				}
 			}
 		}
 

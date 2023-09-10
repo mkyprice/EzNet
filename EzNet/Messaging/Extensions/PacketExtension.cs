@@ -2,6 +2,9 @@
 using EzNet.IO.Extensions;
 using EzNet.Logging;
 using EzNet.Utils;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 
 namespace EzNet.Messaging.Extensions
@@ -79,14 +82,21 @@ namespace EzNet.Messaging.Extensions
 
 		public static IEnumerable<BasePacket> Deserialize(ArraySegment<byte> seg)
 		{
-			byte[] bytes = seg.ToArray();
-			using var ms = new MemoryStream(bytes);
-			while (ms.Position + sizeof(int) < ms.Length)
+			if (seg.Array == null)
 			{
-				BasePacket? packet = Deserialize(ms);
-				if (packet != null)
+				Log.Warn("Tried to deserialize a null array");
+				yield break;
+			} 
+			byte[] bytes = seg.Array;
+			using (var ms = new MemoryStream(bytes))
+			{
+				while (ms.Position + sizeof(int) < seg.Count)
 				{
-					yield return packet;
+					BasePacket? packet = Deserialize(ms);
+					if (packet != null)
+					{
+						yield return packet;
+					}
 				}
 			}
 		}

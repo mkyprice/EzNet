@@ -1,6 +1,8 @@
 ﻿using EzRPC.Logging;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace EzNet.Logging
 {
@@ -26,12 +28,12 @@ namespace EzNet.Logging
 		public static void Error(string message) => WriteMessage(LOG_LEVEL.Error, message);
 		public static void Fatal(string message) => WriteMessage(LOG_LEVEL.Fatal, message);
 
-		public static void Trace([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Trace, string.Format(format, args));
-		public static void Debug([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Debug, string.Format(format, args));
-		public static void Info([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Info, string.Format(format, args));
-		public static void Warn([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Warn, string.Format(format, args));
-		public static void Error([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Error, string.Format(format, args));
-		public static void Fatal([NotNull] string format, [NotNull] params object?[] args) => WriteMessage(LOG_LEVEL.Fatal, string.Format(format, args));
+		public static void Trace(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Trace, string.Format(format, args));
+		public static void Debug(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Debug, string.Format(format, args));
+		public static void Info(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Info, string.Format(format, args));
+		public static void Warn(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Warn, string.Format(format, args));
+		public static void Error(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Error, string.Format(format, args));
+		public static void Fatal(string format, params object?[] args) => WriteMessage(LOG_LEVEL.Fatal, string.Format(format, args));
 
 		public static void SetStream(TextWriter writer)
 		{
