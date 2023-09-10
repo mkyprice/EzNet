@@ -12,43 +12,41 @@ namespace EzNet.Messaging.Handling
 {
 	public class MessageHandler : IMessageHandler, IDisposable
 	{
-		private readonly ConcurrentDictionary<Type, IMessageTypeHandler> _messageHandlers = new ConcurrentDictionary<Type, IMessageTypeHandler>();
 
+		public IMessageContainer Container => _container;
+		public IMessageStreamer Streamer => _streamer;
+		
+		private readonly IMessageContainer _container;
+		private readonly IMessageStreamer _streamer;
+		
 		private Task MessageHandlerTask;
 		private bool IsDisposed = false;
-		public MessageHandler()
+
+		private MessageHandler()
 		{
-			PacketExtension.Init();
+		}
+		private MessageHandler(IMessageContainer container, IMessageStreamer streamer) : base()
+		{
+			_container = container;
+			_streamer = streamer;
 			MessageHandlerTask = Task.Run(HandleMessageLoop);
 		}
 
-		public void RegisterByteHandler(ref Action<ArraySegment<byte>, Connection> callback)
+		public static MessageHandler Build(IMessageContainer? container = null, IMessageStreamer? streamer = null)
 		{
-			callback += ReadPackets;
+			PacketExtension.Init();
+			IMessageContainer c = container == null ? new MessageContainer() : container;
+			IMessageStreamer s = streamer == null ? new MessageStreamer(c) : streamer;
+			return new MessageHandler(c, s);
 		}
-
-		public void DeregisterByteHandler(ref Action<ArraySegment<byte>, Connection> callback)
-		{
-			callback -= ReadPackets;
-		}
-
-		public void RegisterMessageType<T>()
-			where T : BasePacket, new()
-			=> GetOrCreateMessageHandler<T>();
-		
 		public void AddCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
 		{
-			GetOrCreateMessageHandler<T>().AddCallback(callback);
+			_container.GetOrCreateMessageHandler<T>().AddCallback(callback);
 		}
 		
 		public void RemoveCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
 		{
-			GetOrCreateMessageHandler<T>().RemoveCallback(callback);
-		}
-
-		public int Count<T>() where T : BasePacket, new()
-		{
-			return GetOrCreateMessageHandler<T>().Count;
+			_container.GetOrCreateMessageHandler<T>().RemoveCallback(callback);
 		}
 		
 		public void RegisterRequest<TRequest, TResponse>(Func<TRequest, TResponse> requestFunc)
@@ -131,52 +129,16 @@ namespace EzNet.Messaging.Handling
 			RemoveCallback<ResponsePacket>(ReceiveResponse);
 			return response;
 		}
-		
-		private MessageTypeHandler<T> GetOrCreateMessageHandler<T>()
-			where T : BasePacket, new()
-		{
-			Type type = typeof(T);
-			if (_messageHandlers.TryGetValue(type, out IMessageTypeHandler? handler))
-			{
-				return ((MessageTypeHandler<T>)handler);
-			}
-			handler = new MessageTypeHandler<T>();
-			_messageHandlers[type] = handler;
-			return (MessageTypeHandler<T>)handler;
-		}
 
 		private async Task HandleMessageLoop()
 		{
 			while (IsDisposed == false)
 			{
-				foreach (IMessageTypeHandler handler in _messageHandlers.Values)
+				foreach (IMessageCodec handler in _container.GetCodecs())
 				{
 					handler.Update();
 				}
 				await Task.Delay(1);
-			}
-		}
-
-		private void ReadPackets(ArraySegment<byte> bytes, Connection source)
-		{
-			if (bytes.Array == null)
-			{
-				Log.Warn("Cannot read packets from null buffer");
-				return;
-			}
-			
-			using var ms = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count);
-			while (ms.Position < ms.Length)
-			{
-				if (PacketExtension.TryReadType(ms, out Type type) && 
-				    _messageHandlers.TryGetValue(type, out var handler))
-				{
-					handler.ReadPacket(ms, source);
-				}
-				else
-				{
-					Log.Warn("No message handler for packet type {0}", type);
-				}
 			}
 		}
 		public void Dispose()

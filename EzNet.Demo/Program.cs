@@ -19,7 +19,6 @@ class Program
 		server.RegisterResponseHandler<DemoPacket, TestPacket>(ServerResponse);
 		server.RegisterResponseHandler<TestPacket, TestValueClass>(ServerResponse);
 		
-		
 		var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo"));
 		Console.WriteLine("Received: {0}", packet);
 		
@@ -47,6 +46,13 @@ class Program
 	}
 
 	private static TestValueClass ServerResponse(TestPacket request)
+	{
+		var test = new TestValueClass();
+		// Console.WriteLine("Sending:  {0}", test);
+		return test;
+	}
+
+	private static TestValueClass ClientResponse(DemoPacket request)
 	{
 		var test = new TestValueClass();
 		// Console.WriteLine("Sending:  {0}", test);

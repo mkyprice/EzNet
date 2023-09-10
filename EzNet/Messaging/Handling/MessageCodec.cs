@@ -1,17 +1,12 @@
-﻿using System;
+﻿using EzNet.Messaging.Handling.Abstractions;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
 
 namespace EzNet.Messaging.Handling
 {
-	internal interface IMessageTypeHandler
-	{
-		public void ReadPacket(Stream stream, Connection source);
-		public void Update();
-	}
-	
-	internal class MessageTypeHandler<T> : IMessageTypeHandler
+	public class MessageCodec<T> : IMessageCodec
 		where T : BasePacket, new()
 	{
 		private Action<MessageNotification<T>> _callback;

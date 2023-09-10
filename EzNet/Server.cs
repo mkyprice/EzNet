@@ -4,17 +4,21 @@ using EzNet.Messaging.Handling;
 using EzNet.Messaging.Handling.Abstractions;
 using EzNet.Transports;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 
 namespace EzNet
 {
 	public class Server : IDisposable
 	{
-		public readonly IMessageHandler MessageHandler = new MessageHandler();
-		private readonly HashSet<Connection> _connections = new HashSet<Connection>();
+		#region Events
+
+		public Action<int> OnConnectionAdded;
+
+		#endregion
+		private readonly IMessageHandler MessageHandler = Messaging.Handling.MessageHandler.Build();
+		private readonly ConcurrentDictionary<int, Connection> _connections = new ConcurrentDictionary<int, Connection>();
 		private readonly ITransportServer _server;
 
 		public Server(ITransportServer server)
@@ -22,11 +26,20 @@ namespace EzNet
 			_server = server;
 			_server.OnNewConnection += OnNewConnection;
 		}
-		private void OnNewConnection(ITransportConnection obj)
-		{
-			_connections.Add(new Connection(obj, MessageHandler));
-		}
 
+		/// <summary>
+		/// Try to get a connection by Id
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="connection"></param>
+		/// <returns></returns>
+		public bool TryGetConnection(int id, out Connection connection) => _connections.TryGetValue(id, out connection);
+
+		/// <summary>
+		/// Register a function to handle a packet type
+		/// </summary>
+		/// <param name="callback"></param>
+		/// <typeparam name="TPacket"></typeparam>
 		public void RegisterMessageHandler<TPacket>(Action<TPacket, Connection> callback) 
 			where TPacket : BasePacket, new()
 		{
@@ -36,6 +49,12 @@ namespace EzNet
 			});
 		}
 		
+		/// <summary>
+		/// Register a function to handle requests that require a response
+		/// </summary>
+		/// <param name="callback"></param>
+		/// <typeparam name="TPacket"></typeparam>
+		/// <typeparam name="TResponse"></typeparam>
 		public void RegisterResponseHandler<TPacket, TResponse>(Func<TPacket, TResponse> callback) 
 			where TPacket : BasePacket, new()
 			where TResponse : BasePacket, new()
@@ -43,6 +62,11 @@ namespace EzNet
 			MessageHandler.RegisterRequest(callback);
 		}
 
+		/// <summary>
+		/// Send packet to all connections
+		/// </summary>
+		/// <param name="packet"></param>
+		/// <typeparam name="T"></typeparam>
 		public void Broadcast<T>(T packet)
 			where T : BasePacket, new()
 		{
@@ -53,10 +77,13 @@ namespace EzNet
 				_server.Send(bytes);
 			}
 		}
-
-		private void Shutdown()
+		
+		/// <summary>
+		/// Shutdown all connections and listener
+		/// </summary>
+		public void Shutdown()
 		{
-			foreach (Connection connection in _connections)
+			foreach (Connection connection in _connections.Values)
 			{
 				connection.Dispose();
 			}
@@ -67,6 +94,13 @@ namespace EzNet
 		public void Dispose()
 		{
 			Shutdown();
+		}
+
+		private void OnNewConnection(ITransportConnection obj)
+		{
+			var connection = new Connection(obj, MessageHandler);
+			_connections[connection.Id] = connection;
+			OnConnectionAdded?.Invoke(connection.Id);
 		}
 	}
 }
