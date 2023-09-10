@@ -19,6 +19,11 @@ class Program
 		sw.Start();
 		
 		server.RegisterResponseHandler<DemoPacket, TestPacket>(ServerResponse);
+		server.RegisterResponseHandler<TestPacket, TestValueClass>(ServerResponse);
+		
+		
+		var packet = await client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", 1));
+		Console.WriteLine("Received: {0}", packet);
 
 		List<Task<TestPacket>> requests = new List<Task<TestPacket>>();
 		for (int i = 0; i < 100; i++)
@@ -41,5 +46,12 @@ class Program
 	private static TestPacket ServerResponse(DemoPacket request)
 	{
 		return new TestPacket(request.Text, Random.Shared.NextSingle());
+	}
+
+	private static TestValueClass ServerResponse(TestPacket request)
+	{
+		var test = new TestValueClass();
+		Console.WriteLine("Sending:  {0}", test);
+		return test;
 	}
 }

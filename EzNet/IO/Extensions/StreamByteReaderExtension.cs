@@ -67,6 +67,16 @@ namespace EzNet.IO.Extensions
 			return *((float*)&iv);
 		}
 		
+		public static decimal ReadDecimal(this Stream stream)
+		{
+			int[] buffer = new int[4];
+			buffer[0] = stream.ReadInt();
+			buffer[1] = stream.ReadInt();
+			buffer[2] = stream.ReadInt();
+			buffer[3] = stream.ReadInt();
+			return new decimal(buffer);
+		}
+		
 		public static unsafe double ReadDouble(this Stream stream)
 		{
 			ulong lv = stream.ReadULong();

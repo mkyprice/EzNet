@@ -78,6 +78,15 @@ namespace EzNet.IO
 			stream.Write(v);
 		}
 		
+		public static void Write(this Stream stream, decimal value)
+		{
+			int[] bytes = decimal.GetBits(value);
+			stream.Write(bytes[0]);
+			stream.Write(bytes[1]);
+			stream.Write(bytes[2]);
+			stream.Write(bytes[3]);
+		}
+		
 		public static unsafe void Write(this Stream stream, double value)
 		{
 			ulong v = *(ulong*)&value;
@@ -86,7 +95,7 @@ namespace EzNet.IO
 		
 		public static void Write(this Stream stream, bool value)
 		{
-			stream.WriteByte((byte)(value ? 0 : 1));
+			stream.WriteByte((byte)(value ? 1 : 0));
 		}
 		
 		private static void Write7BitEncodedInt(this Stream stream, int value)

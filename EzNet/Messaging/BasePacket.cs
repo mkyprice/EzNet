@@ -32,6 +32,7 @@ namespace EzNet.Messaging
 
 		#region Writing
 		
+		protected void Write(bool value) => _baseStream.Write(value);
 		protected void Write(byte value) => _baseStream.Write(value);
 		protected void Write(sbyte value) => _baseStream.Write(value);
 		protected void Write(short value) => _baseStream.Write(value);
@@ -41,6 +42,7 @@ namespace EzNet.Messaging
 		protected void Write(long value) => _baseStream.Write(value);
 		protected void Write(ulong value) => _baseStream.Write(value);
 		protected void Write(float value) => _baseStream.Write(value);
+		protected void Write(decimal value) => _baseStream.Write(value);
 		protected void Write(double value) => _baseStream.Write(value);
 		protected void Write(byte[] value) => _baseStream.Write(value, 0, value.Length);
 		protected void Write(char value) => _baseStream.Write(value);
@@ -51,6 +53,7 @@ namespace EzNet.Messaging
 		#region Reading
 
 
+		protected bool ReadBool() => _baseStream.ReadBool();
 		protected byte ReadByte() => (byte)_baseStream.ReadByte();
 		protected sbyte ReadSByte() => _baseStream.ReadSByte();
 		protected short ReadShort() => _baseStream.ReadShort();
@@ -60,6 +63,7 @@ namespace EzNet.Messaging
 		protected long ReadLong() => _baseStream.ReadLong();
 		protected ulong ReadULong() => _baseStream.ReadULong();
 		protected float ReadSingle() => _baseStream.ReadSingle();
+		protected decimal ReadDecimal() => _baseStream.ReadDecimal();
 		protected double ReadDouble() => _baseStream.ReadDouble();
 		protected byte[] ReadBytes(int count) => _baseStream.ReadBytes(count);
 		protected char ReadChar() => _baseStream.ReadChar();
