@@ -1,19 +1,19 @@
 ﻿using EzNet.IO;
 using EzNet.IO.Extensions;
 using EzNet.Logging;
+using EzNet.Utils;
 using System.Reflection;
 
 namespace EzNet.Messaging
 {
-	public static class PacketSerializerExtension
+	internal static class PacketExtension
 	{
-		public static IEnumerable<Type> AssemblyPacketTypes => _keyToPacket.Values;
-		private static readonly Dictionary<int, Type> _keyToPacket = new Dictionary<int, Type>();
-		private static bool IsInitialized = false;
+		private static readonly BidiDictionary<int, Type> _packetKeys = new BidiDictionary<int, Type>();
+		private static bool _isInitialized = false;
 		public static void Init()
 		{
-			if (IsInitialized) return;
-			IsInitialized = true;
+			if (_isInitialized) return;
+			_isInitialized = true;
 
 			Type packet_base_type = typeof(BasePacket);
 			foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -33,7 +33,17 @@ namespace EzNet.Messaging
 						}
 						if (can_create)
 						{
-							_keyToPacket[GetKey(type)] = type;
+							int key;
+							var attrib = type.GetCustomAttribute<PacketAttribute>();
+							if (attrib != null && string.IsNullOrEmpty(attrib.Id) == false)
+							{
+								key = attrib.Id.GetHashCode();
+							}
+							else
+							{
+								key = type.Name.GetHashCode();
+							}
+							_packetKeys[key] = type;
 							Log.Info("Cached packet type {0}", type);
 						}
 						else if (type.IsAbstract == false)
@@ -82,8 +92,8 @@ namespace EzNet.Messaging
 		}
 
 
-		public static bool TryReadType(Stream stream, out Type type) => _keyToPacket.TryGetValue(stream.ReadInt(), out type);
+		public static bool TryReadType(Stream stream, out Type type) => _packetKeys.TryGetValue(stream.ReadInt(), out type);
 		private static void WriteType(Stream stream, in Type type) => stream.Write(GetKey(type));
-		private static int GetKey(in Type type) => type.Name.GetHashCode();
+		private static int GetKey(in Type type) => _packetKeys[type];
 	}
 }

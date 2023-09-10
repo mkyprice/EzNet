@@ -14,12 +14,12 @@
 		protected override void Write()
 		{
 			Write(RequestId);
-			PacketSerializerExtension.Serialize(_baseStream, Packet);
+			PacketExtension.Serialize(_baseStream, Packet);
 		}
 		protected override void Read()
 		{
 			RequestId = ReadInt();
-			Packet = PacketSerializerExtension.Deserialize(_baseStream);
+			Packet = PacketExtension.Deserialize(_baseStream);
 		}
 	}
 }

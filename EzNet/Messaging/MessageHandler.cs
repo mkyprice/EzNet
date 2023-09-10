@@ -11,7 +11,7 @@ namespace EzNet.Messaging
 		private bool IsDisposed = false;
 		public MessageHandler()
 		{
-			PacketSerializerExtension.Init();
+			PacketExtension.Init();
 			MessageHandlerTask = Task.Run(HandleMessageLoop);
 		}
 
@@ -66,7 +66,7 @@ namespace EzNet.Messaging
 			using var ms = new MemoryStream(bytes.Array, bytes.Offset, bytes.Count);
 			while (ms.Position < ms.Length)
 			{
-				if (PacketSerializerExtension.TryReadType(ms, out Type type) && 
+				if (PacketExtension.TryReadType(ms, out Type type) && 
 				    _messageHandlers.TryGetValue(type, out var handler))
 				{
 					handler.ReadPacket(ms, source);

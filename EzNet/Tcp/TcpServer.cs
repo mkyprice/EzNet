@@ -46,7 +46,7 @@ namespace EzNet.Tcp
 			where T : BasePacket
 		{
 			using MemoryStream ms = new MemoryStream();
-			PacketSerializerExtension.Serialize(ms, packet);
+			PacketExtension.Serialize(ms, packet);
 			byte[] bytes = ms.ToArray();
 			foreach (PacketConnection connection in _connections)
 			{

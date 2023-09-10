@@ -2,6 +2,7 @@
 
 namespace EzNet.Demo
 {
+	[Packet("Test")]
 	public class TestPacket : BasePacket
 	{
 		public string Text;

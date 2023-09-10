@@ -3,6 +3,7 @@ using System.Text;
 
 namespace EzNet.Demo
 {
+	[Packet("Demo")]
 	public class DemoPacket : BasePacket
 	{
 		public string Text { get; set; }
