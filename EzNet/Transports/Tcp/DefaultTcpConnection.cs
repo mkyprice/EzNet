@@ -1,17 +1,16 @@
 ﻿using EzNet.Logging;
-using EzNet.Messaging;
 using System;
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 
-namespace EzNet.Tcp
+namespace EzNet.Transports.Tcp
 {
-	public class DefaultTcpConnection : IConnection, IDisposable
+	public class DefaultTcpConnection : ITransportConnection, IDisposable
 	{
 		public bool IsConnected => _connection.Connected;
-		public Action<ArraySegment<byte>> OnReceive { get; set; }
-		
+		public Action<ArraySegment<byte>, ITransportConnection> OnReceive { get; set; }
+		public Action<ITransportConnection> OnDisconnect { get; set; }
+
 		protected bool IsDisposed { get; private set; }
 
 		private static readonly int MEGABYTE = 1048576;
@@ -88,12 +87,6 @@ namespace EzNet.Tcp
 			return _connection.Connected;
 		}
 
-		#region Virtual overloads
-
-		protected virtual void OnShutdown() { }
-
-		#endregion
-
 		private void OnBytesReceived(IAsyncResult result)
 		{
 			Socket socket = result.AsyncState as Socket;
@@ -108,7 +101,7 @@ namespace EzNet.Tcp
 				return;
 			}
 			Log.Debug("{0} received {1} bytes", this, received);
-			OnReceive?.Invoke(new ArraySegment<byte>(_receiveBuffer, 0, received));
+			OnReceive?.Invoke(new ArraySegment<byte>(_receiveBuffer, 0, received), this);
 			_connection.BeginReceive(_receiveBuffer, 0, _receiveBuffer.Length, SocketFlags.None, OnBytesReceived, _connection);
 		}
 		
@@ -119,7 +112,7 @@ namespace EzNet.Tcp
 				return;
 			}
 			_connection.Shutdown(SocketShutdown.Both);
-			OnShutdown();
+			OnDisconnect?.Invoke(this);
 			Dispose();
 		}
 		

@@ -7,8 +7,12 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
-    <ItemGroup>
-      <Folder Include="Udp\" />
-    </ItemGroup>
+
+
+
+
+
+
+
 
 </Project>

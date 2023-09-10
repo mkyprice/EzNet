@@ -8,9 +8,9 @@
 		where T : BasePacket, new()
 	{
 		public readonly T Message;
-		public readonly PacketConnection Source;
+		public readonly Connection Source;
 
-		public MessageNotification(T message, PacketConnection source)
+		public MessageNotification(T message, Connection source)
 		{
 			Message = message;
 			Source = source;

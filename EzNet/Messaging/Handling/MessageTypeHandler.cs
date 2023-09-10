@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 
 namespace EzNet.Messaging.Handling
 {
-	public interface IMessageTypeHandler
+	internal interface IMessageTypeHandler
 	{
-		public void ReadPacket(Stream stream, PacketConnection source);
+		public void ReadPacket(Stream stream, Connection source);
 		public void Update();
 	}
 	
-	public class MessageTypeHandler<T> : IMessageTypeHandler
+	internal class MessageTypeHandler<T> : IMessageTypeHandler
 		where T : BasePacket, new()
 	{
 		private Action<MessageNotification<T>> _callback;
@@ -69,7 +69,7 @@ namespace EzNet.Messaging.Handling
 			return packet;
 		}
 		
-		public void ReadPacket(Stream stream, PacketConnection source)
+		public void ReadPacket(Stream stream, Connection source)
 		{
 			T packet = new T();
 			packet.Read(stream);
