@@ -59,14 +59,14 @@ namespace EzNet
 		/// Send a packet async that expects a response
 		/// </summary>
 		/// <param name="packet"></param>
-		/// <param name="timeoutMS"></param>
+		/// <param name="timeoutMs"></param>
 		/// <typeparam name="TResponse"></typeparam>
 		/// <typeparam name="TRequest"></typeparam>
 		/// <returns></returns>
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMS = -1)
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
 			where TRequest : BasePacket, new()
 			where TResponse : BasePacket, new()
-			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMS);
+			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
 		
 
 		/// <summary>

@@ -10,8 +10,8 @@ class Program
 	{
 		var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 9696);
 
-		using var server = ConnectionFactory.BuildServer(endpoint, true);
-		using var client = ConnectionFactory.BuildClient(endpoint, true);
+		using var server = ConnectionFactory.BuildServer(endpoint, false);
+		using var client = ConnectionFactory.BuildClient(endpoint, false);
 		
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
@@ -23,9 +23,9 @@ class Program
 		Console.WriteLine("Received: {0}", packet);
 		
 		List<Task<TestValueClass>> requests = new List<Task<TestValueClass>>();
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			requests.Add(client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", i)));
+			requests.Add(client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", i), 2000));
 			// var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"));
 			// Console.WriteLine("Send async result: {0}", packet);
 		}

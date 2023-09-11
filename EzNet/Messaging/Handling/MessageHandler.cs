@@ -70,7 +70,7 @@ namespace EzNet.Messaging.Handling
 			});
 		}
 
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<BasePacket> sendFunc, int timeoutMS = -1)
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<BasePacket> sendFunc, int timeoutMs = 2000)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
@@ -103,11 +103,11 @@ namespace EzNet.Messaging.Handling
 			
 			// Await the result
 			TResponse response;
-			if (timeoutMS >= 0)
+			if (timeoutMs >= 0)
 			{
-				using (var cancellation = new CancellationTokenSource(timeoutMS))
+				using (var cancellation = new CancellationTokenSource(timeoutMs))
 				{
-					Task task = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(timeoutMS, cancellation.Token));
+					Task task = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(timeoutMs, cancellation.Token));
 					if (task == taskCompletionSource.Task)
 					{
 						cancellation.Cancel();

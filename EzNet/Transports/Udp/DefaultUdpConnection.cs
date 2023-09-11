@@ -18,7 +18,7 @@ namespace EzNet.Transports.Udp
 		private byte[] _buffer = new byte[BUFFER_SIZE];
 		private bool _isShutdown = true;
 
-		private readonly Dictionary<EndPoint, DefaultUdpClient> _clients = new Dictionary<EndPoint, DefaultUdpClient>();
+		private readonly Dictionary<EndPoint, DefaultUdpTransport> _clients = new Dictionary<EndPoint, DefaultUdpTransport>();
 		
 		public DefaultUdpConnection()
 		{
@@ -86,6 +86,9 @@ namespace EzNet.Transports.Udp
 				ShutDown();
 				return;
 			}
+
+			OnBytesReceived?.Invoke(new ArraySegment<byte>(_buffer, 0, received), ep);
+			_socket.BeginReceiveFrom(_buffer, 0, _buffer.Length, SocketFlags.None, ref ep, OnReceiveFrom, _socket);
 		}
 
 		public int SendTo(byte[] payload, SocketFlags flags, EndPoint endPoint)
@@ -96,7 +99,7 @@ namespace EzNet.Transports.Udp
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine(e.Message);
+				Log.Warn(e.Message);
 			}
 			return 0;
 		}
