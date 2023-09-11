@@ -1,4 +1,5 @@
 ﻿using EzNet.Logging;
+using EzNet.Transports.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -36,24 +37,13 @@ namespace EzNet.Transports.Udp
 			}
 			else
 			{
-				Console.WriteLine("WARNING: Tried to call Bind on an active connection");
+				Log.Warn("Tried to call Bind on an active connection");
 			}
 		}
 
 		public void Bind(int port)
 		{
-			string host_name = Dns.GetHostName();
-			IPHostEntry ipHost = Dns.GetHostEntry(host_name);
-			IPAddress address = null;
-			for (int i = 0; i < ipHost.AddressList.Length; i++)
-			{
-				if (ipHost.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
-				{
-					address = ipHost.AddressList[i];
-					break;
-				}
-			}
-			IPEndPoint endPoint = new IPEndPoint(address, port);
+			EndPoint endPoint = SocketExtensions.GetEndPoint(port, AddressFamily.InterNetwork);
 			Bind(endPoint);
 		}
 

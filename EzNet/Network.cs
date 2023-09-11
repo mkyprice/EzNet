@@ -3,6 +3,7 @@ using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EzNet
@@ -10,14 +11,21 @@ namespace EzNet
 	public abstract class Network : IDisposable
 	{
 		public readonly int Id;
+		private static volatile int _nextId = 1;
 		protected IMessageHandler MessageHandler;
-        
+
+		protected Network()
+		{
+			Id = _nextId;
+			Interlocked.Increment(ref _nextId);
+		}
+		
 		/// <summary>
 		/// Send a packet
 		/// </summary>
 		/// <param name="packet"></param>
 		/// <typeparam name="T"></typeparam>
-		public abstract void Send<T>(T packet) where T : BasePacket;
+		public abstract bool Send<T>(T packet) where T : BasePacket;
 
 		/// <summary>
 		/// Send a packet async that expects a response
@@ -56,9 +64,7 @@ namespace EzNet
 		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback) 
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
-		{
-			MessageHandler.RegisterRequest(callback);
-		}
+			=> MessageHandler.RegisterRequest(callback);
 
 		/// <summary>
 		/// Dispose of the network

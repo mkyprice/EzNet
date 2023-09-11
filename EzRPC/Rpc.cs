@@ -1,25 +1,71 @@
-﻿using EzRPC.Reflection.Core;
+﻿using EzNet;
+using EzRPC.Logging;
+using EzRPC.Reflection;
 using EzRPC.Reflection.Extensions;
+using EzRPC.Serialization;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EzRPC
 {
-	public static class Rpc
+	public abstract class BaseRpc : IDisposable
 	{
-		internal static readonly MethodContainer MethodCache = new MethodContainer();
-		private static bool _isInitialized = false;
-		public static bool IsInitialized() => _isInitialized;
-		public static bool Initialize()
-		{
-			if (_isInitialized) return true;
+		protected Network Tcp;
+		protected Network Udp;
+		protected readonly EzSerializer Serializer = new EzSerializer();
+		private static int _nextRequestId = 1;
+		
+		protected bool IsDisposed { get; private set; } = false;
 
-			foreach (Type type in AssemblyExtension.GetTypesWithAttribute<Synced>())
+		public BaseRpc()
+		{
+			if (Rpc.IsInitialized() == false)
 			{
-				MethodCache.Cache(type);
+				Rpc.Initialize();
 			}
-			
-			_isInitialized = true;
-			return true;
+		}
+        
+		protected RpcResponse ResponseHandler(RpcRequest request)
+		{
+			string method = request.MethodName;
+			Type type = request.DeclaringType;
+			object[] args = request.Params;
+
+			object response = MethodExtensions.CallMethod(type, method, args);
+
+			return new RpcResponse(response, RPC_ERROR.None);
+		}
+		
+		public async Task<object> CallAsync<T>(string method, params object[] args) => await CallAsync(typeof(T), method, args);
+
+		public async Task<object> CallAsync(Type type, string method, params object[] args)
+		{
+			RpcRequest request = new RpcRequest()
+			{
+				MethodName = method,
+				DeclaringType = type,
+				Params = args
+			};
+
+			RpcResponse response = await Tcp.SendAsync<RpcResponse, RpcRequest>(request);
+			if (response.Error != RPC_ERROR.None)
+			{
+				Log.Warn("RPC call failed with error {0}", response.Error);
+			}
+			return response.Result;
+		}
+
+		// public async Task<object> CallAsync(object instance, string method, params object[] args)
+		// {
+		// 	return MethodExtensions.CallMethod(instance, method, args);
+		// }
+		
+		public virtual void Dispose()
+		{
+			if (IsDisposed) return;
+			IsDisposed = true;
+			Serializer.Dispose();
 		}
 	}
 }

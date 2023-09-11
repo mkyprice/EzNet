@@ -53,12 +53,13 @@ namespace EzNet.Transports.Udp
 			}
 		}
 		
-		public void Send(byte[] bytes)
+		public bool Send(byte[] bytes)
 		{
 			foreach (var connection in _connections.Values)
 			{
 				connection.Send(bytes);
 			}
+			return true;
 		}
 		
 		public void Shutdown()

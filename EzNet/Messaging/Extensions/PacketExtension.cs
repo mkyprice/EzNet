@@ -58,15 +58,15 @@ namespace EzNet.Messaging.Extensions
 			}
 		}
 
-		public static void Serialize<T>(Stream? stream, T packet) 
+		public static void Serialize<T>(Stream stream, T packet) 
 			where T : BasePacket
 		{
-			Type type = packet.GetType();
+			Type type = packet?.GetType() ?? typeof(T);
 			WriteType(stream, type);
-			packet.Write(stream);
+			packet?.Write(stream);
 		}
 
-		public static BasePacket Deserialize(Stream? stream)
+		public static BasePacket Deserialize(Stream stream)
 		{
 			if (TryReadType(stream, out Type type))
 			{

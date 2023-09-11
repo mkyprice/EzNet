@@ -43,7 +43,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <typeparam name="TResponse"></typeparam>
 		/// <typeparam name="TRequest"></typeparam>
 		/// <returns></returns>
-		public Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<BasePacket> sendFunc, int timeoutMs = 2000)
+		public Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new();
 	}

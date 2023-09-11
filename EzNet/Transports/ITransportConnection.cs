@@ -6,7 +6,7 @@ namespace EzNet.Transports
 	{
 		public Action<ArraySegment<byte>, ITransportConnection> OnReceive { get; set; }
 		public Action<ITransportConnection> OnDisconnect { get; set; }
-		public void Send(byte[] bytes);
+		public bool Send(byte[] bytes);
 		public void Shutdown();
 	}
 }

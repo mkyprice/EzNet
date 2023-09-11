@@ -39,12 +39,12 @@ namespace EzNet.Transports.Tcp
 			Connect(endPoint);
 		}
 		
-		public void Send(byte[] bytes)
+		public bool Send(byte[] bytes)
 		{
 			if (_connection.Connected == false)
 			{
 				Log.Warn("Tried to send {0} bytes with unconnected socket", bytes.Length);
-				return;
+				return false;
 			}
 			int totalSent = 0;
 			while (totalSent < bytes.Length)
@@ -54,10 +54,11 @@ namespace EzNet.Transports.Tcp
 				{
 					Log.Warn("{0} Failed to send {1} bytes. Reason: {2}", this, bytes.Length, error);
 					Shutdown();
-					return;
+					return false;
 				}
 				totalSent += sent;
 			}
+			return true;
 		}
 		
 		public bool Connect(EndPoint endPoint)

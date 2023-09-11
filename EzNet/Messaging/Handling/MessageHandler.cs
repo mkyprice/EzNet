@@ -1,9 +1,11 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
+using EzNet.Messaging.Handling.Utils;
 using EzNet.Messaging.Requests;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace EzNet.Messaging.Handling
 {
 	public class MessageHandler : IMessageHandler, IDisposable
 	{
-
+		private readonly List<IResponseHandler> _responseHandlers = new List<IResponseHandler>();
 		public IMessageContainer Container => _container;
 		public IMessageStreamer Streamer => _streamer;
 		
@@ -58,19 +60,12 @@ namespace EzNet.Messaging.Handling
 				Log.Warn("Response function<{0}, {1}> was null", typeof(TRequest).Name, typeof(TResponse).Name);
 				return;
 			}
-			AddCallback<RequestPacket>((notification) =>
-			{
-				// Respond to type request
-				if (notification.Message.Packet is TRequest request)
-				{
-					TResponse response = requestFunc(request);
-					ResponsePacket responsePacket = new ResponsePacket(response, notification.Message.RequestId);
-					notification.Source.Send(responsePacket);
-				}
-			});
+			ResponseHandler<TRequest, TResponse> responseHandler = new ResponseHandler<TRequest, TResponse>(requestFunc);
+			AddCallback<RequestPacket>(responseHandler.OnRequest);
+			_responseHandlers.Add(responseHandler);
 		}
 
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Action<BasePacket> sendFunc, int timeoutMs = 2000)
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
@@ -88,62 +83,95 @@ namespace EzNet.Messaging.Handling
 					{
 						taskCompletionSource.SetResult(r);
 					}
+					else if (responsePacket.Message.Packet is ErrorPacket error)
+					{
+						Log.Error("Encountered error with message {0}", error.ErrorCode);
+						taskCompletionSource.SetResult(default);
+					}
 					else
 					{
 						Log.Error("Received incorrect response type {0}", responsePacket.Message.Packet);
-						taskCompletionSource.SetCanceled();
+						taskCompletionSource.SetResult(default);
 					}
 				}
 			}
 			// Register response
 			AddCallback<ResponsePacket>(ReceiveResponse);
 			
-			// Send out request
-			sendFunc(requestPacket);
-			
-			// Await the result
 			TResponse response;
-			if (timeoutMs >= 0)
+			// Send out request
+			if (sendFunc(requestPacket))
 			{
-				using (var cancellation = new CancellationTokenSource(timeoutMs))
-				{
-					Task task = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(timeoutMs, cancellation.Token));
-					if (task == taskCompletionSource.Task)
-					{
-						cancellation.Cancel();
-						response = await taskCompletionSource.Task;
-					}
-					else
-					{
-						response = default(TResponse);
-						Log.Warn("Request {0} timed out", request);
-					}
-				}
+				response = await AwaitTaskOrTimeout(taskCompletionSource, timeoutMs);
 			}
 			else
 			{
-				response = await taskCompletionSource.Task;
+				Log.Error("Failed to send request {0}. Please check your connection", request);
+				response = default;
 			}
+			
 			
 			// Cleanup
 			RemoveCallback<ResponsePacket>(ReceiveResponse);
 			return response;
 		}
 
+		/// <summary>
+		/// Waits for the task or times out if it takes too long
+		/// </summary>
+		/// <param name="taskSource"></param>
+		/// <param name="timeoutMs">timeout in milliseconds. -1 for no timeout</param>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		private async Task<T> AwaitTaskOrTimeout<T>(TaskCompletionSource<T> taskSource, int timeoutMs)
+		{
+			T result;
+			if (timeoutMs >= 0)
+			{
+				using (CancellationTokenSource cancellation = new CancellationTokenSource(timeoutMs))
+				{
+					Task task = await Task.WhenAny(taskSource.Task, Task.Delay(timeoutMs, cancellation.Token));
+					if (task == taskSource.Task)
+					{
+						cancellation.Cancel();
+						result = await taskSource.Task;
+					}
+					else
+					{
+						result = default(T);
+						Log.Warn("Response {0} timed out", typeof(T));
+					}
+				}
+			}
+			else
+			{
+				result = await taskSource.Task;
+			}
+			return result;
+		}
+
 		private async Task HandleMessageLoop()
 		{
-			while (IsDisposed == false)
+			try
 			{
-				foreach (IMessageCodec handler in _container.GetCodecs())
+				while (IsDisposed == false)
 				{
-					handler.Update();
+					foreach (IMessageCodec handler in _container.GetCodecs())
+					{
+						handler.Update();
+					}
+					await Task.Delay(1);
 				}
-				await Task.Delay(1);
+			}
+			catch (Exception e)
+			{
+				Log.Fatal("Encountered error: {0}\nTrace - {1}", e.Message, e.StackTrace);
 			}
 		}
 		public void Dispose()
 		{
 			if (IsDisposed) return;
+			_responseHandlers.Clear();
 			//TODO: Dispose
 			IsDisposed = true;
 		}

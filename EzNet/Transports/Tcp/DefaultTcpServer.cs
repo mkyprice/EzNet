@@ -2,6 +2,7 @@
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling;
 using EzNet.Messaging.Handling.Abstractions;
+using EzNet.Transports.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,6 +19,13 @@ namespace EzNet.Transports.Tcp
 		private readonly Socket Listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		private readonly List<ITransportConnection> _connections = new List<ITransportConnection>();
 
+		
+		public void Listen(int port)
+		{
+			EndPoint endPoint = SocketExtensions.GetEndPoint(port, AddressFamily.InterNetwork);
+			Listen(endPoint);
+		}
+		
 		public void Listen(EndPoint endPoint)
 		{
 			Listener.Bind(endPoint);
@@ -26,12 +34,13 @@ namespace EzNet.Transports.Tcp
 			Listener.BeginAccept(OnConnection, Listener);
 		}
 
-		public void Send(byte[] bytes)
+		public bool Send(byte[] bytes)
 		{
 			foreach (ITransportConnection connection in _connections)
 			{
 				connection.Send(bytes);
 			}
+			return true;
 		}
 		
 		public void Shutdown()

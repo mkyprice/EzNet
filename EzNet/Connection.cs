@@ -3,55 +3,58 @@ using EzNet.Messaging.Handling.Abstractions;
 using EzNet.Transports;
 using System;
 using System.IO;
-using System.Threading;
 
 namespace EzNet
 {
 	public class Connection : Network
 	{
-		public readonly int Id;
-		protected readonly ITransportConnection RawConnection;
+		private readonly ITransportConnection _connection;
+
+		public Action<Connection> OnEndConnection;
+		
 		private Action<ArraySegment<byte>, Connection> OnBytesReceived;
-
-		private static volatile int _nextId = 1;
-
-		internal Connection(ITransportConnection rawConnection)
+		
+		
+		internal Connection(ITransportConnection connection)
 		{
 			MessageHandler = EzNet.Messaging.Handling.MessageHandler.Build();
-			RawConnection = rawConnection;
-			RawConnection.OnReceive += ReceiveRaw;
+			_connection = connection;
+			_connection.OnReceive += ReceiveRaw;
+			_connection.OnDisconnect += OnDisconnect;
 			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
-			Id = _nextId;
-			Interlocked.Increment(ref _nextId);
 		}
 
-		internal Connection(ITransportConnection rawConnection, IMessageHandler handler)
+		internal Connection(ITransportConnection connection, IMessageHandler handler)
 		{
 			MessageHandler = handler;
-			RawConnection = rawConnection;
-			RawConnection.OnReceive += ReceiveRaw;
+			_connection = connection;
+			_connection.OnReceive += ReceiveRaw;
 			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
-			Id = _nextId;
-			Interlocked.Increment(ref _nextId);
 		}
 
 		
-		public override void Send<T>(T packet)
+		public override bool Send<T>(T packet)
 		{
-			using (MemoryStream? ms = new MemoryStream())
+			using (MemoryStream ms = new MemoryStream())
 			{
 				PacketExtension.Serialize(ms, packet);
 				byte[] bytes = ms.ToArray();
-				RawConnection.Send(bytes);
+				return _connection.Send(bytes);
 			}
 		}
 
 		public override void Dispose()
 		{
-			RawConnection.Shutdown();
+			_connection.Shutdown();
 			MessageHandler.Dispose();
 		}
+
+		#region Callbacks
 		
 		private void ReceiveRaw(ArraySegment<byte> bytes, ITransportConnection connection) => OnBytesReceived?.Invoke(bytes, this);
+		
+		private void OnDisconnect(ITransportConnection obj) => OnEndConnection?.Invoke(this);
+
+		#endregion
 	}
 }

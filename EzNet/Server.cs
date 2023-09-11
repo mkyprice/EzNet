@@ -1,11 +1,8 @@
 ﻿using EzNet.Messaging;
 using EzNet.Messaging.Extensions;
-using EzNet.Messaging.Handling;
-using EzNet.Messaging.Handling.Abstractions;
 using EzNet.Transports;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 
 namespace EzNet
@@ -14,20 +11,25 @@ namespace EzNet
 	{
 		#region Events
 
+		// TODO: Add more events
+
 		public Action<int> OnConnectionAdded;
+		public Action<int> OnConnectionRemoved;
 
 		#endregion
+		
 		private readonly ConcurrentDictionary<int, Connection> _connections = new ConcurrentDictionary<int, Connection>();
 		private readonly ITransportServer _server;
 
-		public Server(ITransportServer server)
+		private Server() { }
+		internal Server(ITransportServer server)
 		{
 			MessageHandler = Messaging.Handling.MessageHandler.Build();
 			_server = server;
 			_server.OnNewConnection += OnNewConnection;
 		}
 		
-		public override void Send<T>(T packet) => Broadcast(packet);
+		public override bool Send<T>(T packet) => Broadcast(packet);
 
 		/// <summary>
 		/// Try to get a connection by Id
@@ -43,14 +45,14 @@ namespace EzNet
 		/// </summary>
 		/// <param name="packet"></param>
 		/// <typeparam name="T"></typeparam>
-		public void Broadcast<T>(T packet)
+		public bool Broadcast<T>(T packet)
 			where T : BasePacket
 		{
 			using (MemoryStream? ms = new MemoryStream())
 			{
 				PacketExtension.Serialize(ms, packet);
 				byte[] bytes = ms.ToArray();
-				_server.Send(bytes);
+				return _server.Send(bytes);
 			}
 		}
 		
@@ -72,11 +74,26 @@ namespace EzNet
 			Shutdown();
 		}
 
+		#region Callbacks
+
+		/// <summary>
+		/// New connection callback
+		/// </summary>
+		/// <param name="obj"></param>
 		private void OnNewConnection(ITransportConnection obj)
 		{
-			var connection = new Connection(obj, MessageHandler);
+			Connection connection = new Connection(obj, MessageHandler);
+			connection.OnEndConnection += OnEndConnection;
 			_connections[connection.Id] = connection;
 			OnConnectionAdded?.Invoke(connection.Id);
 		}
+
+		/// <summary>
+		/// On disconnect
+		/// </summary>
+		/// <param name="obj"></param>
+		private void OnEndConnection(Connection obj) => OnConnectionRemoved?.Invoke(obj.Id);
+
+		#endregion
 	}
 }

@@ -27,13 +27,15 @@ namespace EzNet.Transports.Udp
 			}
 		}
 
-		public void Send(byte[] bytes)
+		public bool Send(byte[] bytes)
 		{
 			int sent = _transport.SendTo(bytes, SocketFlags.None, _endPoint);
 			if (sent <= 0)
 			{
 				OnDisconnect?.Invoke(this);
+				return false;
 			}
+			return true;
 		}
 		
 		public void Shutdown()
