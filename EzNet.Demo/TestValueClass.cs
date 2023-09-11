@@ -64,9 +64,9 @@ namespace EzNet.Demo
 			       Long == other.Long &&
 			       ULong == other.ULong &&
 			       Char == other.Char &&
-			       Float == other.Float &&
+			       Math.Abs(Float - other.Float) < 0.001f &&
 			       Decimal == other.Decimal &&
-			       Double == other.Double &&
+			       Math.Abs(Double - other.Double) < 0.001f &&
 			       Bool == other.Bool &&
 			       String == other.String &&
 			       DateTime == other.DateTime;

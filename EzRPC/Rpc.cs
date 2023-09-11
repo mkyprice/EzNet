@@ -1,15 +1,17 @@
 ﻿using EzNet;
 using EzRPC.Logging;
 using EzRPC.Reflection;
+using EzRPC.Reflection.Core;
 using EzRPC.Reflection.Extensions;
 using EzRPC.Serialization;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EzRPC
 {
-	public abstract class BaseRpc : IDisposable
+	public abstract class Rpc : IDisposable
 	{
 		protected Network Tcp;
 		protected Network Udp;
@@ -18,13 +20,15 @@ namespace EzRPC
 		
 		protected bool IsDisposed { get; private set; } = false;
 
-		public BaseRpc()
+		public Rpc()
 		{
-			if (Rpc.IsInitialized() == false)
+			if (ReflectionCache.IsInitialized() == false)
 			{
-				Rpc.Initialize();
+				ReflectionCache.Initialize();
 			}
 		}
+
+		public abstract void Start(EndPoint tcp, EndPoint udp);
         
 		protected RpcResponse ResponseHandler(RpcRequest request)
 		{

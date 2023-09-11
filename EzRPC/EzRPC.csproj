@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Transport\" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\EzNet\EzNet.csproj" />
     </ItemGroup>
 

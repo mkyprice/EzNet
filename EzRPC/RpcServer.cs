@@ -4,13 +4,12 @@ using System.Threading.Tasks;
 
 namespace EzRPC
 {
-	public class RpcServer : BaseRpc
+	public class RpcServer : Rpc
 	{
-		
-		public RpcServer(EndPoint tcpEndpoint, EndPoint udpEndpoint)
+		public override void Start(EndPoint tcp, EndPoint udp)
 		{
-			Tcp = ConnectionFactory.BuildServer(tcpEndpoint, true);
-			Udp = ConnectionFactory.BuildServer(udpEndpoint, false);
+			Tcp = ConnectionFactory.BuildServer(tcp, true);
+			Udp = ConnectionFactory.BuildServer(udp, false);
             
 			Tcp.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
 			Udp.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);

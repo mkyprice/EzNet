@@ -1,4 +1,5 @@
 ﻿using EzRPC.Logging;
+using EzRPC.Reflection.Core;
 using System;
 using System.Reflection;
 
@@ -42,7 +43,7 @@ namespace EzRPC.Reflection.Extensions
 		
 		public static MethodInfo? GetMethod(Type type, string name)
 		{
-			if (Rpc.MethodCache[type]?.TryGet(name, out MethodInfo method) == true)
+			if (ReflectionCache.MethodCache[type]?.TryGet(name, out MethodInfo method) == true)
 			{
 				return method;
 			}
