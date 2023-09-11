@@ -1,14 +1,21 @@
-﻿using EzRPC.Reflection;
+﻿using EzNet;
+using EzRPC.Logging;
+using EzRPC.Reflection;
 using EzRPC.Reflection.Extensions;
-using EzRPC.Transport;
+using EzRPC.Serialization;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EzRPC
 {
 	public abstract class BaseRpc : IDisposable
 	{
-		private readonly NetworkPacketQueue _incomingPacketQueue = new NetworkPacketQueue();
+		protected Network Tcp;
+		protected Network Udp;
+		protected readonly EzSerializer Serializer = new EzSerializer();
+		private static int _nextRequestId = 1;
+		
 		protected bool IsDisposed { get; private set; } = false;
 
 		public BaseRpc()
@@ -18,6 +25,17 @@ namespace EzRPC
 				Rpc.Initialize();
 			}
 		}
+        
+		protected RpcResponse ResponseHandler(RpcRequest request)
+		{
+			string method = request.MethodName;
+			Type type = request.DeclaringType;
+			object[] args = request.Params;
+
+			object response = MethodExtensions.CallMethod(type, method, args);
+
+			return new RpcResponse(response, RPC_ERROR.None);
+		}
 		
 		public async Task<object> CallAsync<T>(string method, params object[] args) => await CallAsync(typeof(T), method, args);
 
@@ -25,30 +43,29 @@ namespace EzRPC
 		{
 			RpcRequest request = new RpcRequest()
 			{
-				RequestId = Guid.NewGuid().ToString().GetHashCode(),
-				Method = new MethodModel()
-				{
-					DeclaringType = type,
-					MethodName = method,
-					ParameterTypes = args.ToTypeArray()
-				},
+				MethodName = method,
+				DeclaringType = type,
 				Params = args
 			};
-			
-			return MethodExtensions.CallMethod(type, method, args);
+
+			RpcResponse response = await Tcp.SendAsync<RpcResponse, RpcRequest>(request);
+			if (response.Error != RPC_ERROR.None)
+			{
+				Log.Warn("RPC call failed with error {0}", response.Error);
+			}
+			return response.Result;
 		}
 
-		public async Task<object> CallAsync(object instance, string method, params object[] args)
-		{
-			return MethodExtensions.CallMethod(instance, method, args);
-		}
-
-		protected abstract Task<object> SendRequestAsync(RpcRequest request);
+		// public async Task<object> CallAsync(object instance, string method, params object[] args)
+		// {
+		// 	return MethodExtensions.CallMethod(instance, method, args);
+		// }
 		
 		public virtual void Dispose()
 		{
 			if (IsDisposed) return;
 			IsDisposed = true;
+			Serializer.Dispose();
 		}
 	}
 }
