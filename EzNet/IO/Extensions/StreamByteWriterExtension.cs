@@ -1,7 +1,7 @@
 ﻿using EzNet.Messaging;
 using System.IO;
 
-namespace EzNet.IO
+namespace EzNet.IO.Extensions
 {
 	public static class StreamByteWriterExtension
 	{

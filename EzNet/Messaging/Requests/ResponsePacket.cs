@@ -17,12 +17,12 @@ namespace EzNet.Messaging.Requests
 		protected override void Write()
 		{
 			Write(RequestId);
-			PacketExtension.Serialize(_baseStream, Packet);
+			PacketExtension.Serialize(BaseStream, Packet);
 		}
 		protected override void Read()
 		{
 			RequestId = ReadInt();
-			Packet = PacketExtension.Deserialize(_baseStream);
+			Packet = PacketExtension.Deserialize(BaseStream);
 		}
 	}
 }

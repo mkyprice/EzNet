@@ -10,22 +10,24 @@ using System.IO;
 
 namespace EzNet
 {
-	public class Server : IDisposable
+	public class Server : Network
 	{
 		#region Events
 
 		public Action<int> OnConnectionAdded;
 
 		#endregion
-		private readonly IMessageHandler MessageHandler = Messaging.Handling.MessageHandler.Build();
 		private readonly ConcurrentDictionary<int, Connection> _connections = new ConcurrentDictionary<int, Connection>();
 		private readonly ITransportServer _server;
 
 		public Server(ITransportServer server)
 		{
+			MessageHandler = Messaging.Handling.MessageHandler.Build();
 			_server = server;
 			_server.OnNewConnection += OnNewConnection;
 		}
+		
+		public override void Send<T>(T packet) => Broadcast(packet);
 
 		/// <summary>
 		/// Try to get a connection by Id
@@ -35,32 +37,6 @@ namespace EzNet
 		/// <returns></returns>
 		public bool TryGetConnection(int id, out Connection connection) => _connections.TryGetValue(id, out connection);
 
-		/// <summary>
-		/// Register a function to handle a packet type
-		/// </summary>
-		/// <param name="callback"></param>
-		/// <typeparam name="TPacket"></typeparam>
-		public void RegisterMessageHandler<TPacket>(Action<TPacket, Connection> callback) 
-			where TPacket : BasePacket, new()
-		{
-			MessageHandler.AddCallback<TPacket>((n) =>
-			{
-				callback?.Invoke(n.Message, (Connection)n.Source);
-			});
-		}
-		
-		/// <summary>
-		/// Register a function to handle requests that require a response
-		/// </summary>
-		/// <param name="callback"></param>
-		/// <typeparam name="TResponse"></typeparam>
-		/// <typeparam name="TRequest"></typeparam>
-		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback) 
-			where TResponse : BasePacket, new()
-			where TRequest : BasePacket, new()
-		{
-			MessageHandler.RegisterRequest(callback);
-		}
 
 		/// <summary>
 		/// Send packet to all connections
@@ -68,9 +44,9 @@ namespace EzNet
 		/// <param name="packet"></param>
 		/// <typeparam name="T"></typeparam>
 		public void Broadcast<T>(T packet)
-			where T : BasePacket, new()
+			where T : BasePacket
 		{
-			using (MemoryStream ms = new MemoryStream())
+			using (MemoryStream? ms = new MemoryStream())
 			{
 				PacketExtension.Serialize(ms, packet);
 				byte[] bytes = ms.ToArray();
@@ -91,7 +67,7 @@ namespace EzNet
 			_server.Shutdown();
 		}
 		
-		public void Dispose()
+		public override void Dispose()
 		{
 			Shutdown();
 		}

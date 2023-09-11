@@ -10,70 +10,70 @@ namespace EzNet.Messaging
 	{
 		public static Encoding Encoding = Encoding.UTF8;
 		
-		protected Stream _baseStream;
+		protected Stream? BaseStream;
 
 		protected abstract void Write();
 		protected abstract void Read();
 
-		public void Write(Stream stream)
+		public void Write(Stream? stream)
 		{
-			_baseStream = stream;
+			BaseStream = stream;
 			Write();
-			_baseStream = null;
+			BaseStream = null;
 		}
 
-		public void Read(Stream stream)
+		public void Read(Stream? stream)
 		{
-			_baseStream = stream;
+			BaseStream = stream;
 			Read();
-			_baseStream = null;
+			BaseStream = null;
 		}
 		
 
 		#region Writing
 		
-		protected void Write(bool value) => _baseStream.Write(value);
-		protected void Write(byte value) => _baseStream.Write(value);
-		protected void Write(sbyte value) => _baseStream.Write(value);
-		protected void Write(short value) => _baseStream.Write(value);
-		protected void Write(ushort value) => _baseStream.Write(value);
-		protected void Write(int value) => _baseStream.Write(value);
-		protected void Write(uint value) => _baseStream.Write(value);
-		protected void Write(long value) => _baseStream.Write(value);
-		protected void Write(ulong value) => _baseStream.Write(value);
-		protected void Write(float value) => _baseStream.Write(value);
-		protected void Write(decimal value) => _baseStream.Write(value);
-		protected void Write(double value) => _baseStream.Write(value);
-		protected void Write(byte[] value) => _baseStream.Write(value, 0, value.Length);
-		protected void Write(char value) => _baseStream.Write(value);
-		protected void Write(string value) => _baseStream.Write(value ?? string.Empty);
+		protected void Write(bool value) => BaseStream.Write(value);
+		protected void Write(byte value) => BaseStream.Write(value);
+		protected void Write(sbyte value) => BaseStream.Write(value);
+		protected void Write(short value) => BaseStream.Write(value);
+		protected void Write(ushort value) => BaseStream.Write(value);
+		protected void Write(int value) => BaseStream.Write(value);
+		protected void Write(uint value) => BaseStream.Write(value);
+		protected void Write(long value) => BaseStream.Write(value);
+		protected void Write(ulong value) => BaseStream.Write(value);
+		protected void Write(float value) => BaseStream.Write(value);
+		protected void Write(decimal value) => BaseStream.Write(value);
+		protected void Write(double value) => BaseStream.Write(value);
+		protected void Write(byte[] value) => BaseStream.Write(value, 0, value.Length);
+		protected void Write(char value) => BaseStream.Write(value);
+		protected void Write(string value) => BaseStream.Write(value ?? string.Empty);
 
 		#endregion
 
 		#region Reading
 
 
-		protected bool ReadBool() => _baseStream.ReadBool();
-		protected byte ReadByte() => (byte)_baseStream.ReadByte();
-		protected sbyte ReadSByte() => _baseStream.ReadSByte();
-		protected short ReadShort() => _baseStream.ReadShort();
-		protected ushort ReadUShort() => _baseStream.ReadUShort();
-		protected int ReadInt() => _baseStream.ReadInt();
-		protected uint ReadUInt() => _baseStream.ReadUInt();
-		protected long ReadLong() => _baseStream.ReadLong();
-		protected ulong ReadULong() => _baseStream.ReadULong();
-		protected float ReadSingle() => _baseStream.ReadSingle();
-		protected decimal ReadDecimal() => _baseStream.ReadDecimal();
-		protected double ReadDouble() => _baseStream.ReadDouble();
-		protected byte[] ReadBytes(int count) => _baseStream.ReadBytes(count);
-		protected char ReadChar() => _baseStream.ReadChar();
-		protected string ReadString() => _baseStream.ReadString();
+		protected bool ReadBool() => BaseStream.ReadBool();
+		protected byte ReadByte() => (byte)BaseStream.ReadByte();
+		protected sbyte ReadSByte() => BaseStream.ReadSByte();
+		protected short ReadShort() => BaseStream.ReadShort();
+		protected ushort ReadUShort() => BaseStream.ReadUShort();
+		protected int ReadInt() => BaseStream.ReadInt();
+		protected uint ReadUInt() => BaseStream.ReadUInt();
+		protected long ReadLong() => BaseStream.ReadLong();
+		protected ulong ReadULong() => BaseStream.ReadULong();
+		protected float ReadSingle() => BaseStream.ReadSingle();
+		protected decimal ReadDecimal() => BaseStream.ReadDecimal();
+		protected double ReadDouble() => BaseStream.ReadDouble();
+		protected byte[] ReadBytes(int count) => BaseStream.ReadBytes(count);
+		protected char ReadChar() => BaseStream.ReadChar();
+		protected string ReadString() => BaseStream.ReadString();
 
 		#endregion
 
 		public void Dispose()
 		{
-			_baseStream.Dispose();
+			BaseStream.Dispose();
 		}
 	}
 }
