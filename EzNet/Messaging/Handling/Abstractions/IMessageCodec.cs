@@ -9,7 +9,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// </summary>
 		/// <param name="stream"></param>
 		/// <param name="source"></param>
-		public void ReadPacket(Stream stream, Connection source);
+		public void ReadPacket(Stream? stream, Connection source);
 		
 		/// <summary>
 		/// Performs dequeue and events

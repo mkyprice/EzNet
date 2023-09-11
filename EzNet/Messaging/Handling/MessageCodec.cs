@@ -64,7 +64,7 @@ namespace EzNet.Messaging.Handling
 			return packet;
 		}
 		
-		public void ReadPacket(Stream stream, Connection source)
+		public void ReadPacket(Stream? stream, Connection source)
 		{
 			T packet = new T();
 			packet.Read(stream);

@@ -47,7 +47,7 @@ namespace EzNet.Messaging.Extensions
 								key = type.Name.GetHashCode();
 							}
 							_packetKeys[key] = type;
-							Log.Info("Cached packet type {0}", type);
+							Log.Debug("Cached packet type {0}", type);
 						}
 						else if (type.IsAbstract == false)
 						{
@@ -58,7 +58,7 @@ namespace EzNet.Messaging.Extensions
 			}
 		}
 
-		public static void Serialize<T>(Stream stream, T packet) 
+		public static void Serialize<T>(Stream? stream, T packet) 
 			where T : BasePacket
 		{
 			Type type = packet.GetType();
@@ -66,7 +66,7 @@ namespace EzNet.Messaging.Extensions
 			packet.Write(stream);
 		}
 
-		public static BasePacket Deserialize(Stream stream)
+		public static BasePacket Deserialize(Stream? stream)
 		{
 			if (TryReadType(stream, out Type type))
 			{
@@ -102,8 +102,8 @@ namespace EzNet.Messaging.Extensions
 		}
 
 
-		public static bool TryReadType(Stream stream, out Type type) => _packetKeys.TryGetValue(stream.ReadInt(), out type);
-		private static void WriteType(Stream stream, in Type type) => stream.Write(GetKey(type));
+		public static bool TryReadType(Stream? stream, out Type type) => _packetKeys.TryGetValue(stream.ReadInt(), out type);
+		private static void WriteType(Stream? stream, in Type type) => stream.Write(GetKey(type));
 		private static int GetKey(in Type type) => _packetKeys[type];
 	}
 }
