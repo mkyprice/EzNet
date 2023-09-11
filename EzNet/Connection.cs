@@ -87,11 +87,11 @@ namespace EzNet
 		/// Register a function to handle requests that require a response
 		/// </summary>
 		/// <param name="callback"></param>
-		/// <typeparam name="TPacket"></typeparam>
 		/// <typeparam name="TResponse"></typeparam>
-		public void RegisterResponseHandler<TPacket, TResponse>(Func<TPacket, TResponse> callback) 
-			where TPacket : BasePacket, new()
+		/// <typeparam name="TRequest"></typeparam>
+		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback) 
 			where TResponse : BasePacket, new()
+			where TRequest : BasePacket, new()
 		{
 			MessageHandler.RegisterRequest(callback);
 		}

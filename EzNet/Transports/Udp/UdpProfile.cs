@@ -21,7 +21,7 @@ namespace EzNet.Transports.Udp
 		
 		private void OnBytesReceived(ArraySegment<byte> segment, EndPoint endPoint)
 		{
-			if (endPoint == _endPoint)
+			if (endPoint.Equals(_endPoint))
 			{
 				OnReceive?.Invoke(segment, this);
 			}

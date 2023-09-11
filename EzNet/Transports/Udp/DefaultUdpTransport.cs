@@ -48,6 +48,7 @@ namespace EzNet.Transports.Udp
 			{
 				_connections[endPoint] = new UdpProfile(_udp, endPoint);
 				OnNewConnection?.Invoke(_connections[endPoint]);
+				OnReceive += _connections[endPoint].OnReceive;
 				OnReceive?.Invoke(bytes, _connections[endPoint]);
 			}
 		}

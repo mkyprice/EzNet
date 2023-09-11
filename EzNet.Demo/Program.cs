@@ -16,14 +16,14 @@ class Program
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
 		
-		server.RegisterResponseHandler<DemoPacket, TestPacket>(ServerResponse);
-		server.RegisterResponseHandler<TestPacket, TestValueClass>(ServerResponse);
+		server.RegisterResponseHandler<TestPacket, DemoPacket>(ServerResponse);
+		server.RegisterResponseHandler<TestValueClass, TestPacket>(ServerResponse);
 		
-		var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo"));
+		var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"DemoPacketReq"));
 		Console.WriteLine("Received: {0}", packet);
 		
 		List<Task<TestValueClass>> requests = new List<Task<TestValueClass>>();
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < 1000; i++)
 		{
 			requests.Add(client.SendAsync<TestValueClass, TestPacket>(new TestPacket($"Yuuuh", i), 2000));
 			// var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"Yoooo{i}"));
