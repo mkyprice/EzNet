@@ -28,8 +28,6 @@ namespace EzNet
 			_server = server;
 			_server.OnNewConnection += OnNewConnection;
 		}
-		
-		public override bool Send<T>(T packet) => Broadcast(packet);
 
 		/// <summary>
 		/// Try to get a connection by Id

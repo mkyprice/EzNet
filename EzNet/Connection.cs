@@ -1,8 +1,10 @@
-﻿using EzNet.Messaging.Extensions;
+﻿using EzNet.Messaging;
+using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
 using EzNet.Transports;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace EzNet
 {
@@ -31,8 +33,26 @@ namespace EzNet
 			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
 		}
 
+		/// <summary>
+		/// Send a packet async that expects a response
+		/// </summary>
+		/// <param name="packet"></param>
+		/// <param name="timeoutMs"></param>
+		/// <typeparam name="TResponse"></typeparam>
+		/// <typeparam name="TRequest"></typeparam>
+		/// <returns></returns>
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
+			where TRequest : BasePacket, new()
+			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
 		
-		public override bool Send<T>(T packet)
+		/// <summary>
+		/// Send a packet though connection
+		/// </summary>
+		/// <param name="packet"></param>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		public bool Send<T>(T packet)
+			where T : BasePacket
 		{
 			using (MemoryStream ms = new MemoryStream())
 			{

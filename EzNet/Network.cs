@@ -1,10 +1,7 @@
 using EzNet.Messaging;
-using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
 using System;
-using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace EzNet
 {
@@ -19,25 +16,6 @@ namespace EzNet
 			Id = _nextId;
 			Interlocked.Increment(ref _nextId);
 		}
-		
-		/// <summary>
-		/// Send a packet
-		/// </summary>
-		/// <param name="packet"></param>
-		/// <typeparam name="T"></typeparam>
-		public abstract bool Send<T>(T packet) where T : BasePacket;
-
-		/// <summary>
-		/// Send a packet async that expects a response
-		/// </summary>
-		/// <param name="packet"></param>
-		/// <param name="timeoutMs"></param>
-		/// <typeparam name="TResponse"></typeparam>
-		/// <typeparam name="TRequest"></typeparam>
-		/// <returns></returns>
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
-			where TRequest : BasePacket, new()
-			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
 		
 
 		/// <summary>
