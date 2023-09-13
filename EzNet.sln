@@ -1,11 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzRPC.ClientDemo", "EzRPC.ClientDemo\EzRPC.ClientDemo.csproj", "{D78D3809-71F6-4AD6-BE10-A029326B930B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzRPC", "EzRPC\EzRPC.csproj", "{409AD225-D840-4DD1-AC2A-C64568CE70FE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzRPC.ServerDemo", "EzRPC.ServerDemo\EzRPC.ServerDemo.csproj", "{8EF15DCA-B996-4BF9-8778-79F882FAF5B4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzNet", "EzNet\EzNet.csproj", "{F068BBB4-47AC-4500-A85D-1227D4540A3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzNet.Tests", "EzNet.Tests\EzNet.Tests.csproj", "{A496DE9B-2C53-4305-BD76-653E4A39EE60}"
@@ -16,18 +10,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D78D3809-71F6-4AD6-BE10-A029326B930B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D78D3809-71F6-4AD6-BE10-A029326B930B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D78D3809-71F6-4AD6-BE10-A029326B930B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D78D3809-71F6-4AD6-BE10-A029326B930B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{409AD225-D840-4DD1-AC2A-C64568CE70FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{409AD225-D840-4DD1-AC2A-C64568CE70FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{409AD225-D840-4DD1-AC2A-C64568CE70FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{409AD225-D840-4DD1-AC2A-C64568CE70FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8EF15DCA-B996-4BF9-8778-79F882FAF5B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8EF15DCA-B996-4BF9-8778-79F882FAF5B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8EF15DCA-B996-4BF9-8778-79F882FAF5B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8EF15DCA-B996-4BF9-8778-79F882FAF5B4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F068BBB4-47AC-4500-A85D-1227D4540A3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F068BBB4-47AC-4500-A85D-1227D4540A3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F068BBB4-47AC-4500-A85D-1227D4540A3B}.Release|Any CPU.ActiveCfg = Release|Any CPU

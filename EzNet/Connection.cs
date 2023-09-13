@@ -8,10 +8,9 @@ namespace EzNet
 {
 	public class Connection : Network
 	{
-		private readonly ITransportConnection _connection;
-
 		public Action<Connection> OnEndConnection;
 		
+		private readonly ITransportConnection _connection;
 		private Action<ArraySegment<byte>, Connection> OnBytesReceived;
 		
 		
