@@ -13,8 +13,8 @@ public class AsyncSendTests
 	public async Task AwaitAsyncSend()
 	{
 		EndPoint ep = SocketExtensions.GetEndPoint(9696, AddressFamily.InterNetwork);
-		using var server = ConnectionFactory.BuildServer(ep, true);
-		using var client = ConnectionFactory.BuildClient(ep, true);
+		using var server = ConnectionFactory.BuildServer(ep, false);
+		using var client = ConnectionFactory.BuildClient(ep, false);
 		
 		var sent_response = new TestValues();
 		TestValues Response(TestPacket packet)

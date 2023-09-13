@@ -35,9 +35,8 @@ namespace EzNet
 			}
 			else
 			{
-				var udp = new DefaultUdpConnection();
+				var udp = new UdpConnection();
 				udp.Bind(0);
-				udp.Start();
 				transportConnection = new UdpProfile(udp, endPoint);
 			}
 			return BuildClient(transportConnection);
@@ -72,7 +71,6 @@ namespace EzNet
 			{
 				var udp = new DefaultUdpTransport();
 				udp.Bind(port);
-				udp.Start();
 				transportServer = udp;
 			}
 			return BuildServer(transportServer);
@@ -97,7 +95,6 @@ namespace EzNet
 			{
 				var udp = new DefaultUdpTransport();
 				udp.Bind(endPoint);
-				udp.Start();
 				transportServer = udp;
 			}
 			return BuildServer(transportServer);

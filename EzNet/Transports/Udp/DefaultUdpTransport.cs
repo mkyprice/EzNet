@@ -1,8 +1,6 @@
-﻿using EzNet.Transports.Tcp;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Net.Sockets;
 
 namespace EzNet.Transports.Udp
 {
@@ -13,18 +11,12 @@ namespace EzNet.Transports.Udp
 		public Action<ArraySegment<byte>, ITransportConnection> OnReceive { get; set; }
 		public Action<ITransportConnection> OnDisconnect { get; set; }
 
-		private readonly DefaultUdpConnection _udp = new DefaultUdpConnection();
-
+		private readonly UdpConnection _udp = new UdpConnection();
 		private readonly ConcurrentDictionary<EndPoint, ITransportConnection> _connections = new ConcurrentDictionary<EndPoint, ITransportConnection>();
 
 		internal DefaultUdpTransport()
 		{
 			_udp.OnBytesReceived += OnBytesReceived;
-		}
-		internal DefaultUdpTransport(EndPoint endPoint)
-		{
-			_udp.OnBytesReceived += OnBytesReceived;
-			_connections[endPoint] = new UdpProfile(_udp, endPoint);
 		}
 
 		public void Bind(EndPoint endPoint)
@@ -35,11 +27,6 @@ namespace EzNet.Transports.Udp
 		public void Bind(int port)
 		{
 			_udp.Bind(port);
-		}
-
-		public void Start()
-		{
-			_udp.Start();
 		}
 		
 		private void OnBytesReceived(ArraySegment<byte> bytes, EndPoint endPoint)
@@ -64,12 +51,18 @@ namespace EzNet.Transports.Udp
 		
 		public void Shutdown()
 		{
-			
+			if (_udp.Alive == false) return;
+			foreach (var connection in _connections)
+			{
+				connection.Value.Shutdown();
+			}
+			_connections.Clear();
+			_udp.ShutDown();
 		}
 		
 		public void Dispose()
 		{
-			
+			Shutdown();
 		}
 	}
 }

@@ -10,9 +10,10 @@ namespace EzNet.Transports.Udp
 		public Action<ITransportConnection> OnDisconnect { get; set; }
 
 		private readonly EndPoint _endPoint;
-		private readonly DefaultUdpConnection _transport;
+		private readonly UdpConnection _transport;
+		private bool IsAlive = true;
 
-		public UdpProfile(DefaultUdpConnection transport, EndPoint endPoint)
+		public UdpProfile(UdpConnection transport, EndPoint endPoint)
 		{
 			_transport = transport;
 			_endPoint = endPoint;
@@ -40,12 +41,16 @@ namespace EzNet.Transports.Udp
 		
 		public void Shutdown()
 		{
-			
+			if (IsAlive == false) return;
+			IsAlive = false;
+			OnDisconnect?.Invoke(this);
+			OnReceive = null;
+			OnDisconnect = null;
 		}
 		
 		public void Dispose()
 		{
-			
+			Shutdown();
 		}
 	}
 }

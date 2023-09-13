@@ -7,7 +7,10 @@ using System.Net.Sockets;
 
 namespace EzNet.Transports.Udp
 {
-	public class DefaultUdpConnection : IDisposable
+	/// <summary>
+	/// UDP connection
+	/// </summary>
+	public class UdpConnection : IDisposable
 	{
 		public bool Alive => _isShutdown == false;
 		public Action<ArraySegment<byte>, EndPoint> OnBytesReceived;
@@ -21,12 +24,18 @@ namespace EzNet.Transports.Udp
 
 		private readonly Dictionary<EndPoint, DefaultUdpTransport> _clients = new Dictionary<EndPoint, DefaultUdpTransport>();
 		
-		public DefaultUdpConnection()
+		public UdpConnection()
 		{
 			_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 			_socket.ReceiveBufferSize = BUFFER_SIZE;
 			_socket.SendBufferSize = BUFFER_SIZE;
 			_socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+		}
+
+		public void Bind(int port)
+		{
+			EndPoint endPoint = SocketExtensions.GetEndPoint(port, AddressFamily.InterNetwork);
+			Bind(endPoint);
 		}
 
 		public void Bind(EndPoint endPoint)
@@ -39,15 +48,11 @@ namespace EzNet.Transports.Udp
 			{
 				Log.Warn("Tried to call Bind on an active connection");
 			}
+			
+			Start();
 		}
 
-		public void Bind(int port)
-		{
-			EndPoint endPoint = SocketExtensions.GetEndPoint(port, AddressFamily.InterNetwork);
-			Bind(endPoint);
-		}
-
-		public void Start()
+		private void Start()
 		{
 			if (_isShutdown == false)
 			{
