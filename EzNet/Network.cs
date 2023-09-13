@@ -47,12 +47,17 @@ namespace EzNet
 		/// <typeparam name="TPacket"></typeparam>
 		public void RegisterMessageHandler<TPacket>(Action<TPacket, Connection> callback) 
 			where TPacket : BasePacket, new()
-		{
-			MessageHandler.AddCallback<TPacket>((n) =>
-			{
-				callback?.Invoke(n.Message, (Connection)n.Source);
-			});
-		}
+			=> MessageHandler.AddCallback(callback);
+		
+
+		/// <summary>
+		/// Remove a function that handled a packet type
+		/// </summary>
+		/// <param name="callback"></param>
+		/// <typeparam name="TPacket"></typeparam>
+		public void RemoveMessageHandler<TPacket>(Action<TPacket, Connection> callback) 
+			where TPacket : BasePacket, new()
+			=> MessageHandler.RemoveCallback(callback);
 		
 		/// <summary>
 		/// Register a function to handle requests that require a response

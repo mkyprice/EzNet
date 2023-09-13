@@ -15,14 +15,14 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// </summary>
 		/// <param name="callback"></param>
 		/// <typeparam name="T"></typeparam>
-		public void AddCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new();
+		public void AddCallback<T>(Action<T, Connection> callback) where T : BasePacket, new();
 		
 		/// <summary>
 		/// Remove a callback to handle a packet type
 		/// </summary>
 		/// <param name="callback"></param>
 		/// <typeparam name="T"></typeparam>
-		public void RemoveCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new();
+		public void RemoveCallback<T>(Action<T, Connection> callback) where T : BasePacket, new();
 
 		/// <summary>
 		/// Register a function to handle a packet request with a packet response

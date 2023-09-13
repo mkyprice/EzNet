@@ -41,12 +41,12 @@ namespace EzNet.Messaging.Handling
 			IMessageStreamer s = streamer == null ? new MessageStreamer(c) : streamer;
 			return new MessageHandler(c, s);
 		}
-		public void AddCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
+		public void AddCallback<T>(Action<T, Connection> callback) where T : BasePacket, new()
 		{
 			_container.GetOrCreateMessageHandler<T>().AddCallback(callback);
 		}
 		
-		public void RemoveCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new()
+		public void RemoveCallback<T>(Action<T, Connection> callback) where T : BasePacket, new()
 		{
 			_container.GetOrCreateMessageHandler<T>().RemoveCallback(callback);
 		}
@@ -72,23 +72,23 @@ namespace EzNet.Messaging.Handling
 			
 			// Receiving
 			TaskCompletionSource<TResponse> taskCompletionSource = new TaskCompletionSource<TResponse>();
-			void ReceiveResponse(MessageNotification<ResponsePacket> responsePacket)
+			void ReceiveResponse(ResponsePacket responsePacket, Connection source)
 			{
 				// Ensure matching IDs
-				if (responsePacket.Message.RequestId == requestPacket.RequestId)
+				if (responsePacket.RequestId == requestPacket.RequestId)
 				{
-					if (responsePacket.Message.Response is TResponse r)
+					if (responsePacket.Response is TResponse r)
 					{
 						taskCompletionSource.SetResult(r);
 					}
-					else if (responsePacket.Message.Response is ErrorPacket error)
+					else if (responsePacket.Response is ErrorPacket error)
 					{
 						Log.Error("Encountered error with message {0}", error.ErrorCode);
 						taskCompletionSource.SetResult(default);
 					}
 					else
 					{
-						Log.Error("Received incorrect response type {0}", responsePacket.Message.Response);
+						Log.Error("Received incorrect response type {0}", responsePacket.Response);
 						taskCompletionSource.SetResult(default);
 					}
 				}

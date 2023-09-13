@@ -9,11 +9,11 @@ namespace EzNet.Messaging.Handling
 	public class MessageCodec<T> : IMessageCodec
 		where T : BasePacket, new()
 	{
-		private Action<MessageNotification<T>> _callback;
+		private Action<T, Connection> _callback;
 		public int Count => _receivePacketQueue.Count;
 		private readonly ConcurrentQueue<MessageNotification<T>> _receivePacketQueue = new ConcurrentQueue<MessageNotification<T>>();
 
-		public void AddCallback(Action<MessageNotification<T>> callback)
+		public void AddCallback(Action<T, Connection> callback)
 		{
 			if (_callback == null)
 			{
@@ -25,7 +25,7 @@ namespace EzNet.Messaging.Handling
 			}
 		}
 
-		public void RemoveCallback(Action<MessageNotification<T>> callback)
+		public void RemoveCallback(Action<T, Connection> callback)
 		{
 			if (_callback != null)
 			{
@@ -37,7 +37,7 @@ namespace EzNet.Messaging.Handling
 		{
 			if (_callback != null && TryDequeue(out var message))
 			{
-				_callback.Invoke(message);
+				_callback.Invoke(message.Message, message.Source);
 			}
 		}
 

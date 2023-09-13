@@ -1,10 +1,9 @@
-﻿using EzNet.Messaging;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 
-namespace EzNet.Demo
+namespace EzNet.Tests.Models
 {
-	public class TestValueClass
+	public class TestValues
 	{
 		public byte Byte;
 		public sbyte Sbyte;
@@ -22,7 +21,7 @@ namespace EzNet.Demo
 		public string String;
 		public DateTime DateTime;
 
-		public TestValueClass()
+		public TestValues()
 		{
 			Byte = (byte)Random.Shared.Next(byte.MinValue, byte.MaxValue);
 			Sbyte = (sbyte)Random.Shared.Next(sbyte.MinValue, sbyte.MaxValue);
@@ -54,7 +53,7 @@ namespace EzNet.Demo
 
 		public override bool Equals(object? obj)
 		{
-			return obj is TestValueClass other &&
+			return obj is TestValues other &&
 			       Byte == other.Byte &&
 			       Sbyte == other.Sbyte &&
 			       Short == other.Short &&

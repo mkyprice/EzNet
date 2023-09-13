@@ -1,6 +1,6 @@
 ﻿using EzNet.Messaging;
 
-namespace EzNet.Demo
+namespace EzNet.Tests.Models
 {
 	[Packet("Test")]
 	public class TestPacket : BasePacket

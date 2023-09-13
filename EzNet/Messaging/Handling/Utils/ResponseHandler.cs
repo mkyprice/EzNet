@@ -6,7 +6,7 @@ namespace EzNet.Messaging.Handling.Utils
 {
 	internal interface IResponseHandler
 	{
-		public void OnRequest(MessageNotification<RequestPacket> requestPacket);
+		public void OnRequest(RequestPacket requestPacket, Connection source);
 	}
 	
 	internal class ResponseHandler<TRequest, TResponse> : IResponseHandler
@@ -20,10 +20,10 @@ namespace EzNet.Messaging.Handling.Utils
 			_function = function;
 		}
 		
-		public void OnRequest(MessageNotification<RequestPacket> notification)
+		public void OnRequest(RequestPacket requestPacket, Connection source)
 		{
 			// Respond to type request
-			if (notification.Message.Packet is TRequest request)
+			if (requestPacket.Packet is TRequest request)
 			{
 				object response;
 				try
@@ -36,8 +36,8 @@ namespace EzNet.Messaging.Handling.Utils
 						typeof(TResponse), typeof(TRequest), e.Message, e.StackTrace);
 					response = new ErrorPacket(PACKET_ERROR.BadResponse);
 				}
-				ResponsePacket responsePacket = new ResponsePacket(response, notification.Message.RequestId);
-				if (notification.Source.Send(responsePacket) == false)
+				ResponsePacket responsePacket = new ResponsePacket(response, requestPacket.RequestId);
+				if (source.Send(responsePacket) == false)
 				{
 					Log.Warn("Failed to send response {0}", response);
 				}
