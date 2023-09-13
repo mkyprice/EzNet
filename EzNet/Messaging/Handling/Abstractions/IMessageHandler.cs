@@ -23,7 +23,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <param name="callback"></param>
 		/// <typeparam name="T"></typeparam>
 		public void RemoveCallback<T>(Action<MessageNotification<T>> callback) where T : BasePacket, new();
-		
+
 		/// <summary>
 		/// Register a function to handle a packet request with a packet response
 		/// </summary>
@@ -31,8 +31,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <typeparam name="TRequest"></typeparam>
 		/// <typeparam name="TResponse"></typeparam>
 		public void RegisterRequest<TRequest, TResponse>(Func<TRequest, TResponse> requestFunc)
-			where TRequest : BasePacket, new()
-			where TResponse : BasePacket, new();
+			where TRequest : BasePacket, new();
 		
 		/// <summary>
 		/// Async send a message expecting a response
@@ -44,7 +43,6 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <typeparam name="TRequest"></typeparam>
 		/// <returns></returns>
 		public Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
-			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new();
 	}
 }

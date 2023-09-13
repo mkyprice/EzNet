@@ -53,7 +53,6 @@ namespace EzNet.Messaging.Handling
 		
 		public void RegisterRequest<TRequest, TResponse>(Func<TRequest, TResponse> requestFunc)
 			where TRequest : BasePacket, new()
-			where TResponse : BasePacket, new()
 		{
 			if (requestFunc == null)
 			{
@@ -66,7 +65,6 @@ namespace EzNet.Messaging.Handling
 		}
 
 		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
-			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
 			// Build request packet
@@ -79,18 +77,18 @@ namespace EzNet.Messaging.Handling
 				// Ensure matching IDs
 				if (responsePacket.Message.RequestId == requestPacket.RequestId)
 				{
-					if (responsePacket.Message.Packet is TResponse r)
+					if (responsePacket.Message.Response is TResponse r)
 					{
 						taskCompletionSource.SetResult(r);
 					}
-					else if (responsePacket.Message.Packet is ErrorPacket error)
+					else if (responsePacket.Message.Response is ErrorPacket error)
 					{
 						Log.Error("Encountered error with message {0}", error.ErrorCode);
 						taskCompletionSource.SetResult(default);
 					}
 					else
 					{
-						Log.Error("Received incorrect response type {0}", responsePacket.Message.Packet);
+						Log.Error("Received incorrect response type {0}", responsePacket.Message.Response);
 						taskCompletionSource.SetResult(default);
 					}
 				}

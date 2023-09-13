@@ -37,7 +37,6 @@ namespace EzNet
 		/// <returns></returns>
 		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
 			where TRequest : BasePacket, new()
-			where TResponse : BasePacket, new()
 			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
 		
 
@@ -61,8 +60,7 @@ namespace EzNet
 		/// <param name="callback"></param>
 		/// <typeparam name="TResponse"></typeparam>
 		/// <typeparam name="TRequest"></typeparam>
-		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback) 
-			where TResponse : BasePacket, new()
+		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback)
 			where TRequest : BasePacket, new()
 			=> MessageHandler.RegisterRequest(callback);
 

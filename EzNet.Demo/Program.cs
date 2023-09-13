@@ -15,6 +15,11 @@ class Program
 
 	private static async Task DemoTests()
 	{
+		var response = new TestValueClass();
+		TestValueClass Response(DemoPacket packet)
+		{
+			return response;
+		}
 		EndPoint ep = SocketExtensions.GetEndPoint(9696, AddressFamily.InterNetwork);
 		using var server = ConnectionFactory.BuildServer(ep, false);
 		using var client = ConnectionFactory.BuildClient(ep, false);
@@ -22,11 +27,18 @@ class Program
 		Stopwatch sw = new Stopwatch();
 		sw.Start();
 		
-		server.RegisterResponseHandler<TestPacket, DemoPacket>(ServerResponse);
-		server.RegisterResponseHandler<TestValueClass, TestPacket>(ServerResponse);
+		server.RegisterResponseHandler<TestValueClass, DemoPacket>(Response);
 		
-		var packet = await client.SendAsync<TestPacket, DemoPacket>(new DemoPacket($"DemoPacketReq"));
-		Console.WriteLine("Received packet {0}", packet);
+		var packet = await client.SendAsync<TestValueClass, DemoPacket>(new DemoPacket($"DemoPacketReq"));
+
+		if (response.Equals(packet))
+		{
+			Console.WriteLine("Success: {0}", packet);
+		}
+		else
+		{
+			Console.WriteLine("Fail\n{0}\n{1}", response, packet);
+		}
 		
 		sw.Stop();
 		Console.WriteLine("Total time {0}", sw.Elapsed);
@@ -47,7 +59,6 @@ class Program
 		{
 			TestValueClass response = server_responses[responseIndex];
 			Interlocked.Increment(ref responseIndex);
-			throw new Exception("Oopsies");
 			return response;
 		});
 		

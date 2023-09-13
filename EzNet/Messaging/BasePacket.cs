@@ -1,5 +1,6 @@
 ﻿using EzNet.IO;
 using EzNet.IO.Extensions;
+using EzNet.Logging;
 using System;
 using System.IO;
 using System.Text;
@@ -15,17 +16,31 @@ namespace EzNet.Messaging
 		protected abstract void Write();
 		protected abstract void Read();
 
-		public void Write(Stream? stream)
+		public void Write(Stream stream)
 		{
 			BaseStream = stream;
+			long pos = BaseStream.Position;
+			BaseStream.Position += sizeof(ushort);
 			Write();
+			long curr = BaseStream.Position;
+			BaseStream.Position = pos;
+			Write((ushort)(curr - pos));
+			BaseStream.Position = curr;
 			BaseStream = null;
 		}
 
-		public void Read(Stream? stream)
+		public void Read(Stream stream)
 		{
 			BaseStream = stream;
+			long pos = BaseStream.Position;
+			int length = ReadUShort();
+			long finalPos = pos + length;
 			Read();
+			if (BaseStream.Position != finalPos)
+			{
+				Log.Warn("Failed to read packet {0}", this);
+				BaseStream.Position = finalPos;
+			}
 			BaseStream = null;
 		}
 		
