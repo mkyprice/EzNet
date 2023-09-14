@@ -3,6 +3,8 @@
 
 EzNet is a simple to use networking library 
 
+> 🚧 **Warning** Proceed at your own risk. This is an in-development library so it will change _a lot_. I'll try to keep the master branch stable, but expect many breaking changes.
+
 ## Features
 
 - Async Sending/Receiving
