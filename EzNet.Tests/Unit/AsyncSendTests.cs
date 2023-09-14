@@ -9,32 +9,40 @@ namespace EzNet.Tests.Unit;
 [TestClass]
 public class AsyncSendTests
 {
-	[TestMethod]
-	public async Task AwaitAsyncSend()
+	[DataTestMethod]
+	[DataRow(true)]
+	[DataRow(false)]
+	public async Task AwaitAsyncSend(bool reliable)
 	{
 		EndPoint ep = SocketExtensions.GetEndPoint(9696, AddressFamily.InterNetwork);
-		using var server = ConnectionFactory.BuildServer(ep, false);
-		using var client = ConnectionFactory.BuildClient(ep, false);
+		using Server server = ConnectionFactory.BuildServer(ep, reliable);
+		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
 		
-		var sent_response = new TestValues();
+		var sentResponse = new TestValues();
 		TestValues Response(TestPacket packet)
 		{
-			return sent_response;
+			return sentResponse;
 		}
 		
 		server.RegisterResponseHandler<TestValues, TestPacket>(Response);
-		
-		var received_response = await client.SendAsync<TestValues, TestPacket>(new TestPacket("Sup", 213.3123));
 
-		Assert.AreEqual(sent_response, received_response);
+		Stopwatch sw = new Stopwatch();
+		sw.Start();
+		var receivedResponse = await client.SendAsync<TestValues, TestPacket>(new TestPacket("Sup", 213.3123));
+		sw.Stop();
+		Assert.AreEqual(sentResponse, receivedResponse);
+		
+		Console.WriteLine("Total time: {0}ms", sw.ElapsedMilliseconds);
 	}
 	
-	[TestMethod]
-	public async Task ParallelAsyncSend()
+	[DataTestMethod]
+	[DataRow(true)]
+	[DataRow(false)]
+	public async Task ParallelAsyncSend(bool reliable)
 	{
 		EndPoint ep = SocketExtensions.GetEndPoint(9697, AddressFamily.InterNetwork);
-		using var server = ConnectionFactory.BuildServer(ep, true);
-		using var client = ConnectionFactory.BuildClient(ep, true);
+		using Server server = ConnectionFactory.BuildServer(ep, reliable);
+		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
 		
 		
 		int count = 100;
@@ -57,11 +65,9 @@ public class AsyncSendTests
 		{
 			requests.Add(client.SendAsync<TestValues, TestPacket>(new TestPacket($"Yuuuh", i)));
 		}
-		
-		var results = await Task.WhenAll(requests.ToArray());
+		TestValues[] results = await Task.WhenAll(requests.ToArray());
 		
 		sw.Stop();
-		int total_successes = 0;
 		for (int i = 0; i < count; i++)
 		{
 			var result = results[i];
