@@ -11,8 +11,6 @@ namespace EzNet
 	{
 		#region Events
 
-		// TODO: Add more events
-
 		public Action<int> OnConnectionAdded;
 		public Action<int> OnConnectionRemoved;
 

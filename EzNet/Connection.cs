@@ -10,26 +10,27 @@ namespace EzNet
 {
 	public class Connection : Network
 	{
+		#region Public Events
+
 		public Action<Connection> OnEndConnection;
+
+		#endregion
 		
 		private readonly ITransportConnection _connection;
 		private Action<ArraySegment<byte>, Connection> OnBytesReceived;
-		
-		
-		internal Connection(ITransportConnection connection)
-		{
-			MessageHandler = EzNet.Messaging.Handling.MessageHandler.Build();
-			_connection = connection;
-			_connection.OnReceive += ReceiveRaw;
-			_connection.OnDisconnect += OnDisconnect;
-			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
-		}
 
+		private Connection() { }
+		
+		internal Connection(ITransportConnection connection) 
+			: this(connection, Messaging.Handling.MessageHandler.Build())
+		{ }
+		
 		internal Connection(ITransportConnection connection, IMessageHandler handler)
 		{
 			MessageHandler = handler;
 			_connection = connection;
 			_connection.OnReceive += ReceiveRaw;
+			_connection.OnDisconnect += OnDisconnect;
 			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
 		}
 

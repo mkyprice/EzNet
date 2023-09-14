@@ -5,11 +5,15 @@ using System.Threading;
 
 namespace EzNet
 {
+	/// <summary>
+	/// Base class for all connections
+	/// </summary>
 	public abstract class Network : IDisposable
 	{
 		public readonly int Id;
-		private static volatile int _nextId = 1;
 		protected IMessageHandler MessageHandler;
+		
+		private static volatile int _nextId = 1;
 
 		protected Network()
 		{
