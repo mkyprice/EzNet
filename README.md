@@ -16,13 +16,17 @@ EzNet is a simple to use networking library
 ## Usage
 
 ```cs
+// Create a tcp server
+using Server server = ConnectionFactory.BuildServer(endpoint, true);
 // Create a tcp connection
-using Connection client = ConnectionFactory.BuildClient(endpoint, isReliable);
+using Connection client = ConnectionFactory.BuildClient(endpoint, true);
 // Register our response function for all MyPacket types
-connection.RegisterResponseHandler<float, MyPacket>((p) => 
+server.RegisterResponseHandler<float, MyPacket>((p) => 
 {
     return p.A + p.B;
 });
+// Send a packet that expects a response
+float result = connection.SendAsync<float>(new MyPacket(1, 2));
 ```
 
 ## Dependancies
