@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace EzNet.Serialization
+namespace EzRpc.Serialization
 {
 	public interface ISerializer
 	{

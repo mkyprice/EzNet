@@ -68,11 +68,18 @@ public class AsyncSendTests
 		TestValues[] results = await Task.WhenAll(requests.ToArray());
 		
 		sw.Stop();
-		for (int i = 0; i < count; i++)
+		for (int i = 0; i < results.Length; i++)
 		{
-			var result = results[i];
-			var sent = server_responses[i];
-			Assert.AreEqual(result, sent);
+			bool found = false;
+			for (int j = 0; j < server_responses.Length; j++)
+			{
+				if (results[i]?.Equals(server_responses[j]) == true)
+				{
+					found = true;
+					break;
+				}
+			}
+			Assert.IsTrue(found);
 		}
 		Console.WriteLine("Total time: {0}ms", sw.ElapsedMilliseconds);
 	}

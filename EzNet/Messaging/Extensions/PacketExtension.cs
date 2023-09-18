@@ -18,42 +18,47 @@ namespace EzNet.Messaging.Extensions
 			if (_isInitialized) return;
 			_isInitialized = true;
 
-			Type packet_base_type = typeof(BasePacket);
 			foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
 			{
 				foreach (Type type in assembly.GetTypes())
 				{
-					if (packet_base_type.IsAssignableFrom(type))
+					RegisterType(type);
+				}
+			}
+		}
+
+		public static void RegisterType(Type type)
+		{
+			Type packet_base_type = typeof(BasePacket);
+			if (packet_base_type.IsAssignableFrom(type))
+			{
+				bool can_create = false;
+				foreach (ConstructorInfo constructor in type.GetConstructors())
+				{
+					if (constructor.GetParameters().Length <= 0)
 					{
-						bool can_create = false;
-						foreach (ConstructorInfo constructor in type.GetConstructors())
-						{
-							if (constructor.GetParameters().Length <= 0)
-							{
-								can_create = true;
-								break;
-							}
-						}
-						if (can_create)
-						{
-							int key;
-							var attrib = type.GetCustomAttribute<PacketAttribute>();
-							if (attrib != null && string.IsNullOrEmpty(attrib.Id) == false)
-							{
-								key = attrib.Id.GetHashCode();
-							}
-							else
-							{
-								key = type.Name.GetHashCode();
-							}
-							_packetKeys[key] = type;
-							Log.Debug("Cached packet type {0}", type);
-						}
-						else if (type.IsAbstract == false)
-						{
-							Log.Warn("Unable to create PacketType {0}. Please ensure it has a default constructor", type);
-						}
+						can_create = true;
+						break;
 					}
+				}
+				if (can_create)
+				{
+					int key;
+					var attrib = type.GetCustomAttribute<PacketAttribute>();
+					if (attrib != null && string.IsNullOrEmpty(attrib.Id) == false)
+					{
+						key = attrib.Id.GetHashCode();
+					}
+					else
+					{
+						key = type.Name.GetHashCode();
+					}
+					_packetKeys[key] = type;
+					Log.Debug("Cached packet type {0}", type);
+				}
+				else if (type.IsAbstract == false)
+				{
+					Log.Warn("Unable to create PacketType {0}. Please ensure it has a default constructor", type);
 				}
 			}
 		}

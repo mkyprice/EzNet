@@ -1,11 +1,11 @@
 ﻿using EzNet.Logging;
-using EzNet.Serialization.Extensions;
+using EzRpc.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
-namespace EzNet.Serialization
+namespace EzRpc.Serialization
 {
 	public class EzSerializer : ISerializer
 	{

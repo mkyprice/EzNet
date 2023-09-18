@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzNet", "EzNet\EzNet.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzNet.Tests", "EzNet.Tests\EzNet.Tests.csproj", "{A496DE9B-2C53-4305-BD76-653E4A39EE60}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EzRpc", "EzRpc\EzRpc.csproj", "{F44B1D0A-E5F5-4B87-BF92-15021A6F899A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{A496DE9B-2C53-4305-BD76-653E4A39EE60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A496DE9B-2C53-4305-BD76-653E4A39EE60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A496DE9B-2C53-4305-BD76-653E4A39EE60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F44B1D0A-E5F5-4B87-BF92-15021A6F899A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F44B1D0A-E5F5-4B87-BF92-15021A6F899A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F44B1D0A-E5F5-4B87-BF92-15021A6F899A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F44B1D0A-E5F5-4B87-BF92-15021A6F899A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

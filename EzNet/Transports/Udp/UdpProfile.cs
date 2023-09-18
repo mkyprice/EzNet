@@ -28,6 +28,10 @@ namespace EzNet.Transports.Udp
 			}
 		}
 
+		public bool IsConnected()
+		{
+			return IsAlive;
+		}
 		public bool Send(byte[] bytes)
 		{
 			int sent = _transport.SendTo(bytes, SocketFlags.None, _endPoint);

@@ -3,6 +3,7 @@ using EzNet.Messaging.Extensions;
 using EzNet.Transports;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 
 namespace EzNet
@@ -25,6 +26,18 @@ namespace EzNet
 			MessageHandler = Messaging.Handling.MessageHandler.Build();
 			_server = server;
 			_server.OnNewConnection += OnNewConnection;
+		}
+
+		/// <summary>
+		/// Get all connections
+		/// </summary>
+		/// <returns></returns>
+		public IEnumerable<Connection> GetConnections()
+		{
+			foreach (Connection connection in _connections.Values)
+			{
+				yield return connection;
+			}
 		}
 
 		/// <summary>

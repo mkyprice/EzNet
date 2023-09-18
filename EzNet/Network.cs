@@ -1,4 +1,5 @@
 using EzNet.Messaging;
+using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
 using System;
 using System.Threading;
@@ -10,6 +11,15 @@ namespace EzNet
 	/// </summary>
 	public abstract class Network : IDisposable
 	{
+		#region Static Interface
+
+		public static void RegisterPacket<T>()
+			where T : BasePacket, new()
+		{
+			PacketExtension.RegisterType(typeof(T));
+		}
+
+		#endregion
 		public readonly int Id;
 		protected IMessageHandler MessageHandler;
 		
@@ -48,6 +58,7 @@ namespace EzNet
 		/// <typeparam name="TResponse"></typeparam>
 		/// <typeparam name="TRequest"></typeparam>
 		public void RegisterResponseHandler<TResponse, TRequest>(Func<TRequest, TResponse> callback)
+			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 			=> MessageHandler.RegisterRequest(callback);
 
