@@ -15,13 +15,13 @@ namespace EzRpc.Serialization.Extensions
 		/// <returns></returns>
 		public static object? NewInstance(this Type type)
 		{
-			if (type.IsAbstract)
-			{
-				return null;
-			}
 			if (type.IsPrimitive)
 			{
 				return Activator.CreateInstance(type);
+			}
+			if (type.IsAbstract)
+			{
+				return null;
 			}
 			Func<object> create;
 			if (CreationCache.TryGetValue(type, out create) == false)
