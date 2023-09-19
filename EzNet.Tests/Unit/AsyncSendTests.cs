@@ -12,9 +12,10 @@ public class AsyncSendTests
 	[DataTestMethod]
 	[DataRow(true)]
 	[DataRow(false)]
+	[DoNotParallelize]
 	public async Task AwaitAsyncSend(bool reliable)
 	{
-		EndPoint ep = SocketExtensions.GetEndPoint(9696, AddressFamily.InterNetwork);
+		EndPoint ep = SocketExtensions.GetEndPoint(5010, AddressFamily.InterNetwork);
 		using Server server = ConnectionFactory.BuildServer(ep, reliable);
 		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
 		
@@ -38,9 +39,10 @@ public class AsyncSendTests
 	[DataTestMethod]
 	[DataRow(true)]
 	[DataRow(false)]
+	[DoNotParallelize]
 	public async Task ParallelAsyncSend(bool reliable)
 	{
-		EndPoint ep = SocketExtensions.GetEndPoint(9697, AddressFamily.InterNetwork);
+		EndPoint ep = SocketExtensions.GetEndPoint(5011, AddressFamily.InterNetwork);
 		using Server server = ConnectionFactory.BuildServer(ep, reliable);
 		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
 		
