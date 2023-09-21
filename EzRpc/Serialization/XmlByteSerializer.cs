@@ -2,7 +2,7 @@
 using System.IO;
 using System.Xml.Serialization;
 
-namespace EzNet.Serialization
+namespace EzRpc.Serialization
 {
 	public class XmlByteSerializer : ISerializer
 	{

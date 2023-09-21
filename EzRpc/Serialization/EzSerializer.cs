@@ -1,11 +1,10 @@
-﻿using EzNet.Logging;
-using EzNet.Serialization.Extensions;
+﻿using EzRpc.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
-namespace EzNet.Serialization
+namespace EzRpc.Serialization
 {
 	public class EzSerializer : ISerializer
 	{
@@ -35,10 +34,9 @@ namespace EzNet.Serialization
 
 		public object Deserialize(Stream stream, Type type)
 		{
-			object value = type?.NewInstance();
+			object? value = type?.NewInstance();
 			if (value == null)
 			{
-				Log.Warn("Failed to create instance of {0}", type);
 				return default;
 			}
 			foreach (FieldInfo field in GetFields(type))

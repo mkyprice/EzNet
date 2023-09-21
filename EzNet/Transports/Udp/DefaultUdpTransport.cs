@@ -4,7 +4,7 @@ using System.Net;
 
 namespace EzNet.Transports.Udp
 {
-	public class DefaultUdpTransport : ITransportConnection, ITransportServer, IDisposable
+	public class DefaultUdpTransport : ITransportServer, IDisposable
 	{
 		public Action<ITransportConnection> OnNewConnection { get; set; }
 		public Action<ITransportConnection> OnEndConnection { get; set; }

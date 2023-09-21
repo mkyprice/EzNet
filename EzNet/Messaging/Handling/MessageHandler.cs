@@ -53,6 +53,7 @@ namespace EzNet.Messaging.Handling
 		
 		public void RegisterRequest<TRequest, TResponse>(Func<TRequest, TResponse> requestFunc)
 			where TRequest : BasePacket, new()
+			where TResponse : BasePacket, new()
 		{
 			if (requestFunc == null)
 			{
@@ -65,6 +66,7 @@ namespace EzNet.Messaging.Handling
 		}
 
 		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
+			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
 			// Build request packet

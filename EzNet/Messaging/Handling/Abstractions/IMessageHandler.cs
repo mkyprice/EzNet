@@ -31,7 +31,8 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <typeparam name="TRequest"></typeparam>
 		/// <typeparam name="TResponse"></typeparam>
 		public void RegisterRequest<TRequest, TResponse>(Func<TRequest, TResponse> requestFunc)
-			where TRequest : BasePacket, new();
+			where TRequest : BasePacket, new()
+			where TResponse : BasePacket, new();
 		
 		/// <summary>
 		/// Async send a message expecting a response
@@ -43,6 +44,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <typeparam name="TRequest"></typeparam>
 		/// <returns></returns>
 		public Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
+			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new();
 	}
 }

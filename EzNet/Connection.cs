@@ -15,6 +15,8 @@ namespace EzNet
 		public Action<Connection> OnEndConnection;
 
 		#endregion
+
+		public bool IsConnected => _connection.IsConnected();
 		
 		private readonly ITransportConnection _connection;
 		private Action<ArraySegment<byte>, Connection> OnBytesReceived;
@@ -43,6 +45,7 @@ namespace EzNet
 		/// <typeparam name="TRequest"></typeparam>
 		/// <returns></returns>
 		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
+			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
 		

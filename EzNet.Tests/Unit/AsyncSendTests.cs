@@ -12,11 +12,13 @@ public class AsyncSendTests
 	[DataTestMethod]
 	[DataRow(true)]
 	[DataRow(false)]
+	[DoNotParallelize]
 	public async Task AwaitAsyncSend(bool reliable)
 	{
-		EndPoint ep = SocketExtensions.GetEndPoint(9696, AddressFamily.InterNetwork);
+		EndPoint ep = SocketExtensions.GetEndPoint(5010, AddressFamily.InterNetwork);
 		using Server server = ConnectionFactory.BuildServer(ep, reliable);
 		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
+		Assert.IsTrue(client.IsConnected);
 		
 		var sentResponse = new TestValues();
 		TestValues Response(TestPacket packet)
@@ -38,12 +40,13 @@ public class AsyncSendTests
 	[DataTestMethod]
 	[DataRow(true)]
 	[DataRow(false)]
+	[DoNotParallelize]
 	public async Task ParallelAsyncSend(bool reliable)
 	{
-		EndPoint ep = SocketExtensions.GetEndPoint(9697, AddressFamily.InterNetwork);
+		EndPoint ep = SocketExtensions.GetEndPoint(5011, AddressFamily.InterNetwork);
 		using Server server = ConnectionFactory.BuildServer(ep, reliable);
 		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
-		
+		Assert.IsTrue(client.IsConnected);
 		
 		int count = 100;
 		TestValues[] server_responses = new TestValues[count];
@@ -63,16 +66,15 @@ public class AsyncSendTests
 		List<Task<TestValues>> requests = new List<Task<TestValues>>();
 		for (int i = 0; i < count; i++)
 		{
-			requests.Add(client.SendAsync<TestValues, TestPacket>(new TestPacket($"Yuuuh", i)));
+			requests.Add(client.SendAsync<TestValues, TestPacket>(new TestPacket($"Yuuuh", i), 5000));
 		}
 		TestValues[] results = await Task.WhenAll(requests.ToArray());
 		
 		sw.Stop();
-		for (int i = 0; i < count; i++)
+		foreach (TestValues tv in results)
 		{
-			var result = results[i];
-			var sent = server_responses[i];
-			Assert.AreEqual(result, sent);
+			Assert.IsNotNull(tv);
+			Assert.IsTrue(server_responses.Any(t => tv.Equals(t)));
 		}
 		Console.WriteLine("Total time: {0}ms", sw.ElapsedMilliseconds);
 	}

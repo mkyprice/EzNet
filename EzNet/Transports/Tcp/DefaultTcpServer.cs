@@ -1,4 +1,5 @@
-﻿using EzNet.Messaging;
+﻿using EzNet.Logging;
+using EzNet.Messaging;
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling;
 using EzNet.Messaging.Handling.Abstractions;
@@ -79,7 +80,14 @@ namespace EzNet.Transports.Tcp
 		private void OnDisconnect(ITransportConnection obj)
 		{
 			obj.OnDisconnect -= OnDisconnect;
-			_connections.Remove(obj);
+			try
+			{
+				_connections.Remove(obj);
+			}
+			catch (Exception e)
+			{
+				Log.Error(e.Message);
+			}
 			OnEndConnection?.Invoke(obj);
 		}
 

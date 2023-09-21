@@ -11,7 +11,7 @@ namespace EzNet.Messaging.Handling.Utils
 	
 	internal class ResponseHandler<TRequest, TResponse> : IResponseHandler
 		where TRequest : BasePacket, new()
-		// where TResponse : BasePacket, new()
+		where TResponse : BasePacket, new()
 	{
 		private readonly Func<TRequest, TResponse> _function;
 		
@@ -25,7 +25,7 @@ namespace EzNet.Messaging.Handling.Utils
 			// Respond to type request
 			if (requestPacket.Packet is TRequest request)
 			{
-				object response;
+				BasePacket response;
 				try
 				{
 					response = _function.Invoke(request);

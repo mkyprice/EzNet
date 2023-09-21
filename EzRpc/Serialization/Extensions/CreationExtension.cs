@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace EzNet.Serialization.Extensions
+namespace EzRpc.Serialization.Extensions
 {
 	public static class CreationExtension
 	{
@@ -15,6 +15,14 @@ namespace EzNet.Serialization.Extensions
 		/// <returns></returns>
 		public static object? NewInstance(this Type type)
 		{
+			if (type.IsPrimitive)
+			{
+				return Activator.CreateInstance(type);
+			}
+			if (type.IsAbstract)
+			{
+				return null;
+			}
 			Func<object> create;
 			if (CreationCache.TryGetValue(type, out create) == false)
 			{
