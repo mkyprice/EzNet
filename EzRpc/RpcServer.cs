@@ -1,4 +1,5 @@
 ﻿using EzNet;
+using EzRpc.Injection;
 using EzRpc.Logging;
 using EzRpc.Messaging;
 using EzRpc.State;
@@ -15,7 +16,7 @@ namespace EzRpc
 		protected new Server Tcp;
 		protected new Server Udp;
 		
-		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession())
+		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession(), new ServiceProvider())
 		{
 			Tcp = tcp;
 			Udp = udp;
@@ -80,7 +81,7 @@ namespace EzRpc
 		{
 			if (Tcp.TryGetConnection(obj, out Connection connection))
 			{
-				RpcClient client = new RpcClient(connection, null, Session);
+				RpcClient client = new RpcClient(connection, null, Session, Services);
 				_clients.Add(client);
 			}
 		}

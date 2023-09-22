@@ -16,12 +16,11 @@ namespace EzNet.Tests.Unit
 			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
 			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
 
-			BasicRpc rpcClass = new BasicRpc();
-			server.Bind(rpcClass);
+			server.Bind<BasicRpc>();
 			client.Bind<BasicRpc>();
 
 			float result = await client.CallAsync<float>(typeof(BasicRpc), nameof(BasicRpc.Test), 1, 2);
-			Assert.AreEqual(rpcClass.Test(1, 2), result);
+			Assert.AreEqual(new BasicRpc().Test(1, 2), result);
 		}
 		
 		
@@ -32,8 +31,7 @@ namespace EzNet.Tests.Unit
 			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
 			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
 
-			BasicRpc rpcClass = new BasicRpc();
-			server.Bind(rpcClass);
+			server.Bind<BasicRpc>();
 			client.Bind<BasicRpc>();
 
 			TestValues sent = new TestValues();

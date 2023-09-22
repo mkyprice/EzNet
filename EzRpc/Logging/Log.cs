@@ -4,6 +4,9 @@ using System.IO;
 
 namespace EzRpc.Logging
 {
+	/// <summary>
+	/// TODO: DI logging system
+	/// </summary>
 	internal static class Log
 	{
 		public static LOG_LEVEL Level = LOG_LEVEL.Info;

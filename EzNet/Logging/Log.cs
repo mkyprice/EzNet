@@ -6,6 +6,9 @@ using System.IO;
 
 namespace EzNet.Logging
 {
+	/// <summary>
+	/// TODO: DI logging system
+	/// </summary>
 	public static class Log
 	{
 		public static LOG_LEVEL Level = LOG_LEVEL.Info;
