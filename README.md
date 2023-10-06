@@ -21,12 +21,12 @@ using Server server = ConnectionFactory.BuildServer(endpoint, true);
 // Create a tcp connection
 using Connection client = ConnectionFactory.BuildClient(endpoint, true);
 // Register our response function for all MyPacket types
-server.RegisterResponseHandler<ResponsePacket, MyPacket>((p) => 
+server.RegisterResponseHandler<ResponsePacket, RequestPacket>((p) => 
 {
-    return p.A + p.B;
+    return new ResponsePacket(p.A + p.B);
 });
 // Send a packet that expects a response
-ResponsePacket result = connection.SendAsync<ResponsePacket>(new MyPacket(1, 2));
+ResponsePacket result = connection.SendAsync<ResponsePacket>(new RequestPacket(1, 2));
 ```
 
 ## Dependancies
