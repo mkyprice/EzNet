@@ -9,20 +9,11 @@ namespace EzRpc.State
 	public class RpcSession
 	{
 		private readonly MethodContainer _methodContainer = new MethodContainer();
-		private readonly InstanceCache _instances = new InstanceCache();
-		
-		public void Bind<T>(T obj)
-		{
-			Bind<T>();
-			_instances.Add(obj);
-		}
 
 		public void Bind<T>()
 		{
 			_methodContainer.Cache(typeof(T));
 		}
-
-		public bool TryGetInstance(Type type, out object value) => _instances.TryGet(type, out value);
 		
 		public MethodInfo? GetMethod(Type type, string name)
 		{
