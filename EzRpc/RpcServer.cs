@@ -16,7 +16,11 @@ namespace EzRpc
 		protected new Server Tcp;
 		protected new Server Udp;
 		
-		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession(), new ServiceProvider())
+		public RpcServer(Server tcp, Server udp) : this(tcp, udp, new ServiceProvider())
+		{
+		}
+		
+		public RpcServer(Server tcp, Server udp, ServiceProvider services) : base(tcp, udp, new RpcSession(), services)
 		{
 			Tcp = tcp;
 			Udp = udp;
