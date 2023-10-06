@@ -1,15 +1,13 @@
-﻿using EzRPC.Logging;
-using System;
+﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace EzNet.Logging
+namespace EzRpc.Logging
 {
 	/// <summary>
 	/// TODO: DI logging system
 	/// </summary>
-	public static class Log
+	internal static class Log
 	{
 		public static LOG_LEVEL Level = LOG_LEVEL.Info;
 

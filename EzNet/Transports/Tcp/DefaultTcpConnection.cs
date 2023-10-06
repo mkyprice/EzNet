@@ -38,7 +38,11 @@ namespace EzNet.Transports.Tcp
 		{
 			Connect(endPoint);
 		}
-		
+
+		bool ITransportConnection.IsConnected()
+		{
+			return IsConnected;
+		}
 		public bool Send(byte[] bytes)
 		{
 			if (_connection.Connected == false)

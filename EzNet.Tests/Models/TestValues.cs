@@ -1,9 +1,10 @@
-﻿using System.Reflection;
+﻿using EzNet.Messaging;
+using System.Reflection;
 using System.Text;
 
 namespace EzNet.Tests.Models
 {
-	public class TestValues
+	public class TestValues : BasePacket
 	{
 		public byte Byte;
 		public sbyte Sbyte;
@@ -71,41 +72,41 @@ namespace EzNet.Tests.Models
 			       DateTime == other.DateTime;
 
 		}
-		// protected override void Write()
-		// {
-		// 	Write(Byte);
-		// 	Write(Sbyte);
-		// 	Write(Short);
-		// 	Write(UShort);
-		// 	Write(Int);
-		// 	Write(UInt);
-		// 	Write(Long);
-		// 	Write(ULong);
-		// 	Write(Char);
-		// 	Write(Float);
-		// 	Write(Decimal);
-		// 	Write(Double);
-		// 	Write(Bool);
-		// 	Write(String);
-		// 	Write(DateTime.ToBinary());
-		// }
-		// protected override void Read()
-		// {
-		// 	Byte = ReadByte();
-		// 	Sbyte = ReadSByte();
-		// 	Short = ReadShort();
-		// 	UShort = ReadUShort();
-		// 	Int = ReadInt();
-		// 	UInt = ReadUInt();
-		// 	Long = ReadLong();
-		// 	ULong = ReadULong();
-		// 	Char = ReadChar();
-		// 	Float = ReadSingle();
-		// 	Decimal = ReadDecimal();
-		// 	Double = ReadDouble();
-		// 	Bool = ReadBool();
-		// 	String = ReadString();
-		// 	DateTime = DateTime.FromBinary(ReadLong());
-		// }
+		protected override void Write()
+		{
+			Write(Byte);
+			Write(Sbyte);
+			Write(Short);
+			Write(UShort);
+			Write(Int);
+			Write(UInt);
+			Write(Long);
+			Write(ULong);
+			Write(Char);
+			Write(Float);
+			Write(Decimal);
+			Write(Double);
+			Write(Bool);
+			Write(String);
+			Write(DateTime.ToBinary());
+		}
+		protected override void Read()
+		{
+			Byte = ReadByte();
+			Sbyte = ReadSByte();
+			Short = ReadShort();
+			UShort = ReadUShort();
+			Int = ReadInt();
+			UInt = ReadUInt();
+			Long = ReadLong();
+			ULong = ReadULong();
+			Char = ReadChar();
+			Float = ReadSingle();
+			Decimal = ReadDecimal();
+			Double = ReadDouble();
+			Bool = ReadBool();
+			String = ReadString();
+			DateTime = DateTime.FromBinary(ReadLong());
+		}
 	}
 }

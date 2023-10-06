@@ -3,7 +3,7 @@ using EzNet.Logging;
 using System;
 using System.IO;
 
-namespace EzNet.Serialization.Extensions
+namespace EzRpc.Serialization.Extensions
 {
 	public static class SerializationExtension
 	{
