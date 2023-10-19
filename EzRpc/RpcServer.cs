@@ -4,6 +4,7 @@ using EzRpc.Messaging;
 using EzRpc.State;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -11,6 +12,11 @@ namespace EzRpc
 {
 	public class RpcServer : Rpc
 	{
+		#region Events
+
+		public Action<RpcClient> OnClientConnected;
+
+		#endregion
 		private readonly List<RpcClient> _clients = new List<RpcClient>();
 		protected new Server Tcp;
 		protected new Server Udp;
@@ -25,6 +31,17 @@ namespace EzRpc
 		/// <summary>
 		/// Calls a method on all connections
 		/// </summary>
+		/// <param name="method"></param>
+		/// <param name="args"></param>
+		/// <typeparam name="T"></typeparam>
+		/// <typeparam name="TR"></typeparam>
+		/// <returns></returns>
+		public async Task<TR[]> CallAsync<T, TR>(string method, params object[] args)
+			=> await CallAsync<TR>(typeof(T), method, args);
+
+		/// <summary>
+		/// Calls a method on all connections
+		/// </summary>
 		/// <param name="type"></param>
 		/// <param name="method"></param>
 		/// <param name="args"></param>
@@ -32,48 +49,50 @@ namespace EzRpc
 		/// <returns></returns>
 		public async Task<T[]> CallAsync<T>(Type type, string method, params object[] args)
 		{
-			MethodInfo? info = Session.GetMethod(type, method);
-			Synced? sync = Session.GetMethodSyncData(type, method);
-			if (info == null || sync == null)
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
+			    sender is Server server)
 			{
-				Log.Warn("No bound instance for type {0}", type);
-				return default;
-			}
-			// Local
-			if (sync.CallLocal)
-			{
-				CallMethod(type, method, args);
-			}
-
-			// Send request
-			Server sender = sync.IsReliable ? Tcp : Udp;
-			RpcRequest request = new RpcRequest()
-			{
-				Type = type,
-				Method = method,
-				Args = args
-			};
-			List<Task<RpcResponse>> sendTasks = new List<Task<RpcResponse>>();
-			foreach (Connection connection in sender.GetConnections())
-			{
-				sendTasks.Add(connection.SendAsync<RpcResponse, RpcRequest>(request));
-			}
-			var responses = await Task.WhenAll(sendTasks.ToArray());
-			List<T> results = new List<T>();
-			foreach (var response in responses)
-			{
-				if (response.Error != RPC_ERROR.None)
+				// List<Task<RpcResponse>> sendTasks = new List<Task<RpcResponse>>();
+				// foreach (Connection connection in server.GetConnections())
+				// {
+				// 	sendTasks.Add(connection.SendAsync<RpcResponse, RpcRequest>(request));
+				// }
+				Connection[] connections = server.GetConnections().ToArray();
+				RpcResponse[] responses = new RpcResponse[connections.Length];
+				for (int i = 0; i < connections.Length; i++)
 				{
-					Log.Warn("RPC encountered error: {0}", response.Error);
+					responses[i] = await connections[i].SendAsync<RpcResponse, RpcRequest>(request);
 				}
-				T result = (T)response.Result;
-				if (result == null)
+				// RpcResponse[]? responses = await Task.WhenAll(sendTasks.ToArray());
+				List<T> results = new List<T>();
+				foreach (RpcResponse? response in responses)
 				{
-					Log.Warn("Result was null");
+					if (response.Error != RPC_ERROR.None)
+					{
+						Log.Warn("RPC encountered error: {0}", response.Error);
+					}
+					T result = (T)response.Result;
+					if (result == null)
+					{
+						Log.Warn("Result was null");
+					}
+					results.Add(result);
 				}
-				results.Add(result);
+				return results.ToArray();
 			}
-			return results.ToArray();
+			return Array.Empty<T>();
+		}
+		
+		public override void Call(Type type, string method, params object[] args)
+		{
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
+			    sender is Server server)
+			{
+				foreach (Connection connection in server.GetConnections())
+				{
+					connection.Send(request);
+				}
+			}
 		}
 		
 		private void OnConnectionAdded(int obj)
@@ -82,7 +101,9 @@ namespace EzRpc
 			{
 				RpcClient client = new RpcClient(connection, null, Session);
 				_clients.Add(client);
+				OnClientConnected?.Invoke(client);
 			}
 		}
+		
 	}
 }

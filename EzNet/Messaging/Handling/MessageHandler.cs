@@ -83,11 +83,6 @@ namespace EzNet.Messaging.Handling
 					{
 						taskCompletionSource.SetResult(r);
 					}
-					else if (responsePacket.Response is ErrorPacket error)
-					{
-						Log.Error("Encountered error with message {0}", error.ErrorCode);
-						taskCompletionSource.SetResult(default);
-					}
 					else
 					{
 						Log.Error("Received incorrect response type {0}", responsePacket.Response);
@@ -103,11 +98,22 @@ namespace EzNet.Messaging.Handling
 			if (sendFunc(requestPacket))
 			{
 				response = await AwaitTaskOrTimeout(taskCompletionSource, timeoutMs);
+				if (response == null)
+				{
+					Log.Warn("Send timed out {0}", request);
+					response = new TResponse()
+					{
+						Error = PACKET_ERROR.Timeout
+					};
+				}
 			}
 			else
 			{
-				Log.Error("Failed to send request {0}. Please check your connection", request);
-				response = default;
+				Log.Error("Failed to send request {0}", request);
+				response = new TResponse()
+				{
+					Error = PACKET_ERROR.SendFailed
+				};
 			}
 			
 			

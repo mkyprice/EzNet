@@ -3,7 +3,6 @@ using EzRpc.Logging;
 using EzRpc.Messaging;
 using EzRpc.State;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace EzRpc
@@ -23,41 +22,38 @@ namespace EzRpc
 			Udp = udp;
 		}
 
+		public async Task<TR> CallAsync<T, TR>(string method, params object[] args)
+			=> await CallAsync<TR>(typeof(T), method, args);
+
 		public async Task<T> CallAsync<T>(Type type, string method, params object[] args)
 		{
-			MethodInfo? info = Session.GetMethod(type, method);
-			Synced? sync = Session.GetMethodSyncData(type, method);
-			if (info == null || sync == null)
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
+			    sender is Connection connection)
 			{
-				Log.Warn("No bound instance for type {0}", type);
-				return default;
+				
+				RpcResponse response = await connection.SendAsync<RpcResponse, RpcRequest>(request);
+				if (response.Error != RPC_ERROR.None)
+				{
+					Log.Warn("RPC encountered error: {0}", response.Error);
+					return default;
+				}
+				if (response.Result == null)
+				{
+					Log.Warn("Result was null");
+					return default;
+				}
+				return (T)response.Result;
 			}
-			// Local
-			if (sync.CallLocal)
+			return default;
+		}
+		
+		public override void Call(Type type, string method, params object[] args)
+		{
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
+			    sender is Connection connection)
 			{
-				CallMethod(type, method, args);
+				connection.Send(request);
 			}
-
-			// Send request
-			Connection sender = sync.IsReliable ? Tcp : Udp;
-			RpcRequest request = new RpcRequest()
-			{
-				Type = type,
-				Method = method,
-				Args = args
-			};
-			RpcResponse response = await sender.SendAsync<RpcResponse, RpcRequest>(request);
-			if (response.Error != RPC_ERROR.None)
-			{
-				Log.Warn("RPC encountered error: {0}", response.Error);
-				return default;
-			}
-			if (response.Result == null)
-			{
-				Log.Warn("Result was null");
-				return default;
-			}
-			return (T)response.Result;
 		}
 	}
 }

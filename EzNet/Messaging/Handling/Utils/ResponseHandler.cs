@@ -34,7 +34,10 @@ namespace EzNet.Messaging.Handling.Utils
 				{
 					Log.Error("Response function: <{0}, {1}> encountered error: {2}\nTrace: - {3}", 
 						typeof(TResponse), typeof(TRequest), e.Message, e.StackTrace);
-					response = new ErrorPacket(PACKET_ERROR.BadResponse);
+					response = new TResponse()
+					{
+						Error = PACKET_ERROR.BadResponse
+					};
 				}
 				ResponsePacket responsePacket = new ResponsePacket(response, requestPacket.RequestId);
 				if (source.Send(responsePacket) == false)

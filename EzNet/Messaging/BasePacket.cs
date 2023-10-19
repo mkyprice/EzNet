@@ -10,7 +10,7 @@ namespace EzNet.Messaging
 	public abstract class BasePacket : IDisposable
 	{
 		public static Encoding Encoding = Encoding.UTF8;
-		
+		public PACKET_ERROR Error { get; set; }
 		protected Stream? BaseStream;
 
 		protected abstract void Write();
@@ -20,8 +20,13 @@ namespace EzNet.Messaging
 		{
 			BaseStream = stream;
 			long pos = BaseStream.Position;
+			// Save room for packet length
 			BaseStream.Position += sizeof(ushort);
+			// Write Error message
+			BaseStream.Write((byte)Error);
+			// Write packet data
 			Write();
+			// Write packet length
 			long curr = BaseStream.Position;
 			BaseStream.Position = pos;
 			Write((ushort)(curr - pos));
@@ -35,10 +40,12 @@ namespace EzNet.Messaging
 			long pos = BaseStream.Position;
 			int length = ReadUShort();
 			long finalPos = pos + length;
+			Error = (PACKET_ERROR)ReadByte();
 			Read();
 			if (BaseStream.Position != finalPos)
 			{
-				Log.Warn("Failed to read packet {0}", this);
+				Log.Warn("Misread packet {0}. Read {1} bytes. Should be {2}", 
+					this, finalPos - BaseStream.Position, length);
 				BaseStream.Position = finalPos;
 			}
 			BaseStream = null;

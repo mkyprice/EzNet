@@ -26,7 +26,7 @@ namespace EzNet.Tests.Unit
 		
 		
 		[TestMethod]
-		public async Task AdvancedRpcTest()
+		public async Task ServerToClientCall()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8990);
 			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
@@ -39,6 +39,26 @@ namespace EzNet.Tests.Unit
 			TestValues sent = new TestValues();
 			TestValues result = await client.CallAsync<TestValues>(typeof(BasicRpc), nameof(BasicRpc.TestAdvanced), sent);
 			Assert.AreEqual(sent, result);
+		}
+		
+		
+		[TestMethod]
+		public async Task ClientToServerCall()
+		{
+			EndPoint ep = SocketExtensions.GetEndPoint(8991);
+			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
+			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+
+			BasicRpc rpcClass = new BasicRpc();
+			server.Bind<BasicRpc>();
+			client.Bind(rpcClass);
+
+			TestValues sent = new TestValues();
+			TestValues[] result = await server.CallAsync<TestValues>(typeof(BasicRpc), nameof(BasicRpc.TestAdvanced), sent);
+			foreach (TestValues received in result)
+			{
+				Assert.AreEqual(sent, received);
+			}
 		}
 	}
 }

@@ -2,6 +2,9 @@
 
 namespace EzRpc
 {
+	/// <summary>
+	/// Apply to methods that will be used in RPC
+	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
 	public class Synced : Attribute
 	{
