@@ -13,8 +13,10 @@ namespace EzNet.Tests.Unit
 		public async Task BasicRpcTest()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8989);
-			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
-			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
 
 			BasicRpc rpcClass = new BasicRpc();
 			server.Bind(rpcClass);
@@ -29,8 +31,10 @@ namespace EzNet.Tests.Unit
 		public async Task ServerToClientCall()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8990);
-			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
-			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
 
 			BasicRpc rpcClass = new BasicRpc();
 			server.Bind(rpcClass);
@@ -46,8 +50,10 @@ namespace EzNet.Tests.Unit
 		public async Task ClientToServerCall()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8991);
-			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
-			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
 
 			BasicRpc rpcClass = new BasicRpc();
 			server.Bind<BasicRpc>();

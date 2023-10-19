@@ -17,7 +17,7 @@ namespace EzNet.Benchmarks
 		protected override void Load()
 		{
 			Rpc = new RpcClient(
-				ConnectionFactory.BuildClient(Server.TCP, true), 
+				ConnectionFactory.BuildClient(GameServer.TCP, true), 
 				null);
 
 			Rpc.Bind(State);
@@ -25,7 +25,7 @@ namespace EzNet.Benchmarks
 
 		protected override void Render()
 		{
-			foreach (GameObject gameobject in State._gameobjects)
+			foreach (GameObject gameobject in State._gameobjects.Values)
 			{
 				Raylib.DrawCircleV(gameobject.Position, 32, Color.RED);
 			}

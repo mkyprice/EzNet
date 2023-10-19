@@ -6,16 +6,34 @@ namespace EzNet.Benchmarks.State
 {
 	public class GameState
 	{
-		public readonly ConcurrentBag<GameObject> _gameobjects = new ConcurrentBag<GameObject>();
+		public readonly ConcurrentDictionary<int, GameObject> _gameobjects = new ConcurrentDictionary<int, GameObject>();
 		
 		[Synced(CallLocal = true, IsReliable = true)]
-		public void Create(Vector2 position, Vector2 velocity)
+		public void Create(GameObject gameObject)
 		{
-			_gameobjects.Add(new GameObject()
+			_gameobjects[gameObject.Id] = gameObject;
+		}
+		
+		
+		
+		[Synced(CallLocal = true, IsReliable = true)]
+		public void SetPosition(int id, Vector2 position)
+		{
+			if (_gameobjects.TryGetValue(id, out var gameObject))
 			{
-				Position = position,
-				Velocity = velocity
-			});
+				gameObject.Position = position;
+				_gameobjects[id] = gameObject;
+			}
+		}
+		
+		[Synced(CallLocal = true, IsReliable = true)]
+		public void SetVelocity(int id, Vector2 velocity)
+		{
+			if (_gameobjects.TryGetValue(id, out var gameObject))
+			{
+				gameObject.Velocity = velocity;
+				_gameobjects[id] = gameObject;
+			}
 		}
 	}
 }

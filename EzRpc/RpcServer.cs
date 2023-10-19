@@ -5,7 +5,6 @@ using EzRpc.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace EzRpc
@@ -18,14 +17,37 @@ namespace EzRpc
 
 		#endregion
 		private readonly List<RpcClient> _clients = new List<RpcClient>();
-		protected new Server Tcp;
-		protected new Server Udp;
-		
+		public new Server? Tcp
+		{
+			get => base.Tcp as Server;
+			set
+			{
+				base.Tcp = value;
+				if (value != null)
+				{
+					value.OnConnectionAdded += OnConnectionAdded;
+				}
+			}
+		}
+		public new Server? Udp
+		{
+			get => base.Udp as Server;
+			set
+			{
+				base.Udp = value;
+				if (value != null)
+				{
+					value.OnConnectionAdded += OnConnectionAdded;
+				}
+			}
+		}
+
+		public RpcServer() : base(new RpcSession()) { }
+
 		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession())
 		{
 			Tcp = tcp;
 			Udp = udp;
-			tcp.OnConnectionAdded += OnConnectionAdded;
 		}
 
 		/// <summary>

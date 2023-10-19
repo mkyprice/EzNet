@@ -9,9 +9,11 @@ namespace EzRpc
 {
 	public class RpcClient : Rpc
 	{
-		protected new Connection Tcp;
-		protected new Connection Udp;
-		
+		public new Connection? Tcp { get => base.Tcp as Connection; set => base.Tcp = value; }
+		public new Connection? Udp { get => base.Udp as Connection; set => base.Udp = value; }
+
+		public RpcClient() : base(new RpcSession()) { }
+
 		public RpcClient(Connection tcp, Connection udp) : this(tcp, udp, new RpcSession())
 		{
 		}

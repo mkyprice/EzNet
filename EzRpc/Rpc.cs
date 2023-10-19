@@ -10,18 +10,42 @@ namespace EzRpc
 	public abstract class Rpc : IDisposable
 	{
 		protected readonly RpcSession Session;
-		protected readonly Network Tcp;
-		protected readonly Network Udp;
-
-		public Rpc(Network tcp, Network udp, RpcSession session)
+		public Network? Tcp
 		{
-			Tcp = tcp;
-			Udp = udp;
+			get => _tcp;
+			set
+			{
+				_tcp = value;
+				_tcp?.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
+			}
+		}
+		public Network? Udp
+		{
+			get => _udp;
+			set
+			{
+				_udp = value;
+				_udp?.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
+			}
+		}
+
+		private Network? _tcp;
+		private Network? _udp;
+
+		private Rpc() { }
+
+		public Rpc(RpcSession session)
+		{
 			Session = session;
 			
 			Network.RegisterPacket<RpcRequest>();
 			Network.RegisterPacket<RpcResponse>();
-			Tcp.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
+		}
+		
+		public Rpc(Network tcp, Network udp, RpcSession session) : this(session)
+		{
+			Tcp = tcp;
+			Udp = udp;
 		}
 
 		/// <summary>
