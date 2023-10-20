@@ -3,6 +3,7 @@ using EzNet.Transports.Extensions;
 using EzRpc;
 using Raylib_cs;
 using System.Net;
+using System.Numerics;
 
 namespace EzNet.Benchmarks
 {

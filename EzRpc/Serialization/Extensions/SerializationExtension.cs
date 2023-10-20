@@ -1,26 +1,49 @@
 using EzNet.IO.Extensions;
 using EzNet.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 namespace EzRpc.Serialization.Extensions
 {
 	public static class SerializationExtension
 	{
+		private static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
+		
 		public static void Serialize(this Stream stream, object value)
 		{
 			Type type = value.GetType();
-			stream.Write(type.AssemblyQualifiedName ?? string.Empty);
+			string fullname = type.FullName;
+			TypeCache[fullname] = type;
+			stream.Write(fullname);
 			Rpc.GetSerializer(type).Serialize(stream, value);
 		}
 
 		public static object? Deserialize(this Stream stream)
 		{
-			string typeStr = stream.ReadString();
-			Type type = Type.GetType(typeStr);
-			if (type != null)
+			string fullname = stream.ReadString();
+			if (fullname != null)
 			{
-				return Rpc.GetSerializer(type).Deserialize(stream, type);
+				Type type;
+				if (TypeCache.TryGetValue(fullname, out type) == false)
+				{
+					try
+					{
+						type = Type.GetType(fullname, true);
+					}
+					catch (Exception e)
+					{
+						Log.Warn("Failed to find type {0}\n{1}\n{2}", fullname, e.Message, e.StackTrace);
+					}
+					if (type != null)
+					{
+						TypeCache[fullname] = type;
+					}
+				}
+				if (type != null)
+				{
+					return Rpc.GetSerializer(type).Deserialize(stream, type);
+				}
 			}
 			return null;
 		}

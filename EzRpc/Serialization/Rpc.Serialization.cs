@@ -4,9 +4,8 @@ using System.Collections.Generic;
 
 namespace EzRpc.Serialization
 {
-	public abstract partial class Rpc
+	public partial class Rpc
 	{
-		
 		private static Func<object> _defaultSerializer = CreationExtension.GetActivator<XmlByteSerializer>();
 		private static readonly Dictionary<Type, Func<object>> _typeSerializers = 
 			new Dictionary<Type, Func<object>>();

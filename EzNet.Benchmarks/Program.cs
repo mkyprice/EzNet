@@ -1,6 +1,4 @@
-﻿
-
-using EzNet.Benchmarks;
+﻿using EzNet.Benchmarks;
 using EzNet.Benchmarks.Serializers;
 using EzRpc.Serialization;
 using Raylib_cs;

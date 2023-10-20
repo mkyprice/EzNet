@@ -1,4 +1,5 @@
 ﻿using EzNet;
+using EzRpc.Injection;
 using EzRpc.Logging;
 using EzRpc.Messaging;
 using EzRpc.State;

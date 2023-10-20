@@ -1,4 +1,5 @@
 ﻿using EzNet;
+using EzRpc.Injection;
 using EzRpc.Logging;
 using EzRpc.Messaging;
 using EzRpc.State;
@@ -145,7 +146,7 @@ namespace EzRpc
 				Result = result
 			};
 		}
-
+		
 		private void RequestHandler(RpcRequest request, Connection connection)
 			=> CallLocalMethod(request.Type, request.Method, request.Args);
 		

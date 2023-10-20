@@ -60,7 +60,7 @@ namespace EzNet.Benchmarks
 			const float dt = 1f / 60;
 			while (_isDisposed == false)
 			{
-				await Task.Delay(100);
+				await Task.Delay(10);
 			
 				if (Rpc.Connections > 0)
 				{
