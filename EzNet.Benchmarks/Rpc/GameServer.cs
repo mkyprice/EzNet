@@ -38,7 +38,7 @@ namespace EzNet.Benchmarks
 					Id = Random.Shared.Next(),
 					Position = pos,
 					Velocity = velocity,
-					Color = Color.BLUE
+					Color = ChooseRandom(Color.RED, Color.BLUE, Color.GREEN)
 				};
 				State.Gameobjects[gameObject.Id] = gameObject;
 			}
@@ -94,5 +94,8 @@ namespace EzNet.Benchmarks
 
 		private static Vector2 GetRandomVector(float scalarX, float scalarY)
 			=> new Vector2(Random.Shared.NextSingle() * scalarX, Random.Shared.NextSingle() * scalarY);
+
+		private static T ChooseRandom<T>(params T[] args)
+			=> args[Random.Shared.Next(args.Length)];
 	}
 }

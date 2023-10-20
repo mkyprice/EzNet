@@ -26,7 +26,7 @@ namespace EzNet.Benchmarks
 		{
 			foreach (GameObject gameobject in State.Gameobjects.Values)
 			{
-				Raylib.DrawCircleV(gameobject.Position, 32, gameobject.Color);
+				Raylib.DrawCircleV(gameobject.Position, 16, gameobject.Color);
 			}
 		}
 	}

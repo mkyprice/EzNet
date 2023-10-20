@@ -1,5 +1,5 @@
 using EzNet.Logging;
-using EzNet.Serialization.Extensions;
+using EzRpc.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
