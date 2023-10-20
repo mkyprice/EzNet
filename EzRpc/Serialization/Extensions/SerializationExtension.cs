@@ -9,17 +9,18 @@ namespace EzRpc.Serialization.Extensions
 	{
 		public static void Serialize(this Stream stream, object value)
 		{
-			stream.Write(value?.GetType().AssemblyQualifiedName ?? string.Empty);
-			new XmlByteSerializer().Serialize(stream, value);
+			Type type = value.GetType();
+			stream.Write(type.AssemblyQualifiedName ?? string.Empty);
+			Rpc.GetSerializer(type).Serialize(stream, value);
 		}
 
 		public static object? Deserialize(this Stream stream)
 		{
 			string typeStr = stream.ReadString();
-			Type argType = Type.GetType(typeStr);
-			if (argType != null)
+			Type type = Type.GetType(typeStr);
+			if (type != null)
 			{
-				return new XmlByteSerializer().Deserialize(stream, argType);
+				return Rpc.GetSerializer(type).Deserialize(stream, type);
 			}
 			return null;
 		}

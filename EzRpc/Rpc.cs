@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace EzRpc
 {
-	public abstract class Rpc : IDisposable
+	public abstract partial class Rpc : IDisposable
 	{
 		protected readonly RpcSession Session;
 		public Network? Tcp
