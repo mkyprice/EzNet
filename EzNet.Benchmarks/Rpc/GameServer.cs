@@ -10,32 +10,44 @@ namespace EzNet.Benchmarks
 	public class GameServer : IDisposable
 	{
 		public static readonly EndPoint TCP = SocketExtensions.GetEndPoint(5500);
+		public Rectangle Bounds = new Rectangle(0, 0, 128, 128);
+		
 		private readonly GameState State = new GameState();
-		private readonly Rectangle Bounds = new Rectangle(0, 0, 128, 128);
 		private RpcServer Rpc;
 		private bool _isDisposed = false;
 
 		public GameServer()
 		{
-			var tcp = ConnectionFactory.BuildServer(TCP, true);
-			Rpc = new RpcServer(tcp, null);
+			Rpc = new RpcServer();
+			Rpc.Tcp = ConnectionFactory.BuildServer(TCP, true);
 
 			Rpc.Bind(State);
 			
 			Rpc.OnClientConnected += OnClientConnected;
+			BuildWorld();
+		}
+
+		private void BuildWorld()
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				Vector2 pos = GetRandomVector(Bounds.width, Bounds.height);
+				Vector2 velocity = GetRandomVector(1, 1) * 100;
+				GameObject gameObject = new GameObject()
+				{
+					Id = Random.Shared.Next(),
+					Position = pos,
+					Velocity = velocity,
+					Color = Color.BLUE
+				};
+				State.Gameobjects[gameObject.Id] = gameObject;
+			}
 		}
 		
 		private void OnClientConnected(RpcClient obj)
 		{
-			Vector2 pos = GetRandomVector(Bounds.width, Bounds.height);
-			Vector2 velocity = GetRandomVector(2, 2);
-			GameObject gameObject = new GameObject()
-			{
-				Id = Random.Shared.Next(),
-				Position = pos,
-				Velocity = velocity
-			};
-			Rpc.Call<GameState>(nameof(GameState.Create), gameObject);
+			GameObject[] gameObjects = State.Gameobjects.Values.ToArray();
+			Rpc.Call<GameState>(nameof(GameState.SyncObjects), gameObjects);
 		}
 
 		public void Run()
@@ -48,25 +60,28 @@ namespace EzNet.Benchmarks
 			const float dt = 1f / 60;
 			while (_isDisposed == false)
 			{
-				await Task.Delay(1);
-
-				foreach (GameObject gameObject in State._gameobjects.Values)
+				await Task.Delay(1000);
+			
+				if (Rpc.Connections > 0)
 				{
-					Vector2 p = gameObject.Position + gameObject.Velocity * dt;
-					Rpc.Call<GameState>(nameof(GameState.SetPosition), gameObject.Id, p);
-
-					Vector2 velocity = gameObject.Velocity;
-					if (p.X <= Bounds.x || p.Y <= Bounds.y)
+					foreach (GameObject gameObject in State.Gameobjects.Values)
 					{
-						velocity.X *= -1;
-					}
-					if (p.X >= Bounds.width || p.Y >= Bounds.height)
-					{
-						velocity.Y *= -1;
-					}
-					if (velocity != gameObject.Velocity)
-					{
-						Rpc.Call<GameState>(nameof(GameState.SetVelocity), gameObject.Id, velocity);
+						Vector2 p = gameObject.Position + gameObject.Velocity * dt;
+						Rpc.Call<GameState>(nameof(GameState.SetPosition), gameObject.Id, p);
+			
+						Vector2 velocity = gameObject.Velocity;
+						if (p.X <= Bounds.x || p.Y <= Bounds.y)
+						{
+							velocity.X *= -1;
+						}
+						if (p.X >= Bounds.width || p.Y >= Bounds.height)
+						{
+							velocity.Y *= -1;
+						}
+						if (velocity != gameObject.Velocity)
+						{
+							Rpc.Call<GameState>(nameof(GameState.SetVelocity), gameObject.Id, velocity);
+						}
 					}
 				}
 			}

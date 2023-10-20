@@ -41,7 +41,7 @@ namespace EzNet.Tests.Unit
 			client.Bind<BasicRpc>();
 
 			TestValues sent = new TestValues();
-			TestValues result = await client.CallAsync<TestValues>(typeof(BasicRpc), nameof(BasicRpc.TestAdvanced), sent);
+			TestValues result = await client.CallAsync<BasicRpc, TestValues>(nameof(BasicRpc.TestAdvanced), sent);
 			Assert.AreEqual(sent, result);
 		}
 		
@@ -60,7 +60,7 @@ namespace EzNet.Tests.Unit
 			client.Bind(rpcClass);
 
 			TestValues sent = new TestValues();
-			TestValues[] result = await server.CallAsync<TestValues>(typeof(BasicRpc), nameof(BasicRpc.TestAdvanced), sent);
+			TestValues[] result = await server.CallAsync<BasicRpc, TestValues>(nameof(BasicRpc.TestAdvanced), sent);
 			foreach (TestValues received in result)
 			{
 				Assert.AreEqual(sent, received);

@@ -17,6 +17,7 @@ namespace EzRpc
 			{
 				_tcp = value;
 				_tcp?.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
+				_tcp?.RegisterMessageHandler<RpcRequest>(RequestHandler);
 			}
 		}
 		public Network? Udp
@@ -26,6 +27,7 @@ namespace EzRpc
 			{
 				_udp = value;
 				_udp?.RegisterResponseHandler<RpcResponse, RpcRequest>(ResponseHandler);
+				_udp?.RegisterMessageHandler<RpcRequest>(RequestHandler);
 			}
 		}
 
@@ -62,7 +64,7 @@ namespace EzRpc
 		public void Bind<T>() => Session.Bind<T>();
 
 		/// <summary>
-		/// Call method without awaiting response
+		/// Call remote function without awaiting response
 		/// </summary>
 		/// <param name="method"></param>
 		/// <param name="args"></param>
@@ -70,7 +72,7 @@ namespace EzRpc
 		public void Call<T>(string method, params object[] args) => Call(typeof(T), method, args);
 		
 		/// <summary>
-		/// Call method without awaiting response
+		/// Call remote function without awaiting response
 		/// </summary>
 		/// <param name="type"></param>
 		/// <param name="method"></param>
@@ -106,7 +108,7 @@ namespace EzRpc
 		/// <returns></returns>
 		protected bool HandleLocalCall(Type type, string method, object[] args, out RpcRequest request, out Network send)
 		{
-			if (Session.TryGetMethodSyncData(type, method, out Synced? sync) == false)
+			if (Session.TryGetMethodSyncData(type, method, out Synced sync) == false)
 			{
 				request = default;
 				send = null;
@@ -143,11 +145,16 @@ namespace EzRpc
 				Result = result
 			};
 		}
+
+		private void RequestHandler(RpcRequest request, Connection connection)
+			=> CallLocalMethod(request.Type, request.Method, request.Args);
 		
 		public void Dispose()
 		{
 			Tcp?.Dispose();
+			Tcp = null;
 			Udp?.Dispose();
+			Udp = null;
 		}
 	}
 }

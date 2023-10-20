@@ -31,14 +31,14 @@ namespace EzNet.Messaging.Handling
 		{
 			_container = container;
 			_streamer = streamer;
-			MessageHandlerTask = Task.Run(HandleMessageLoop);
+			MessageHandlerTask = Task.Factory.StartNew(HandleMessageLoop, TaskCreationOptions.LongRunning);
 		}
 
 		public static MessageHandler Build(IMessageContainer? container = null, IMessageStreamer? streamer = null)
 		{
 			PacketExtension.Init();
-			IMessageContainer c = container == null ? new MessageContainer() : container;
-			IMessageStreamer s = streamer == null ? new MessageStreamer(c) : streamer;
+			IMessageContainer c = container ?? new MessageContainer();
+			IMessageStreamer s = streamer ?? new MessageStreamer(c);
 			return new MessageHandler(c, s);
 		}
 		public void AddCallback<T>(Action<T, Connection> callback) where T : BasePacket, new()
@@ -86,7 +86,10 @@ namespace EzNet.Messaging.Handling
 					else
 					{
 						Log.Error("Received incorrect response type {0}", responsePacket.Response);
-						taskCompletionSource.SetResult(default);
+						taskCompletionSource.SetResult(new TResponse()
+						{
+							Error = PACKET_ERROR.BadResponse
+						});
 					}
 				}
 			}

@@ -7,7 +7,24 @@ namespace EzRpc.Serialization.Extensions
 {
 	public static class SerializationExtension
 	{
-		public static void WriteObject(this Stream stream, object value)
+		public static void Serialize(this Stream stream, object value)
+		{
+			stream.Write(value?.GetType().AssemblyQualifiedName ?? string.Empty);
+			new XmlByteSerializer().Serialize(stream, value);
+		}
+
+		public static object? Deserialize(this Stream stream)
+		{
+			string typeStr = stream.ReadString();
+			Type argType = Type.GetType(typeStr);
+			if (argType != null)
+			{
+				return new XmlByteSerializer().Deserialize(stream, argType);
+			}
+			return null;
+		}
+		
+		public static void WritePrimitive(this Stream stream, object value)
 		{
 			switch (value)
 			{
@@ -65,7 +82,7 @@ namespace EzRpc.Serialization.Extensions
 			}
 		}
 
-		public static object Read(this Stream stream, Type type)
+		public static object ReadPrimitive(this Stream stream, Type type)
 		{
 			TypeCode tc = Type.GetTypeCode(type);
 			switch (tc)

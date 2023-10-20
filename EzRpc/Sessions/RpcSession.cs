@@ -36,7 +36,7 @@ namespace EzRpc.State
 			return false;
 		}
 		
-		public bool TryGetMethodSyncData(Type type, string name, out Synced? synced)
+		public bool TryGetMethodSyncData(Type type, string name, out Synced synced)
 		{
 			if (_methodContainer.TryGetMethodCache(type, out MethodCache cache) &&
 			    cache.TryGet(name, out synced))

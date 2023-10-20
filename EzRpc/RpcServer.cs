@@ -16,6 +16,8 @@ namespace EzRpc
 		public Action<RpcClient> OnClientConnected;
 
 		#endregion
+		
+		public int Connections { get => _clients.Count; }
 		private readonly List<RpcClient> _clients = new List<RpcClient>();
 		public new Server? Tcp
 		{
@@ -42,13 +44,11 @@ namespace EzRpc
 			}
 		}
 
-		public RpcServer() : base(new RpcSession()) { }
+		public RpcServer() : base(new RpcSession())
+		{ }
 
 		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession())
-		{
-			Tcp = tcp;
-			Udp = udp;
-		}
+		{ }
 
 		/// <summary>
 		/// Calls a method on all connections
@@ -71,38 +71,32 @@ namespace EzRpc
 		/// <returns></returns>
 		public async Task<T[]> CallAsync<T>(Type type, string method, params object[] args)
 		{
-			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
-			    sender is Server server)
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) == false ||
+			    (sender is Server server) == false) return Array.Empty<T>();
+			
+			Connection[] connections = server.GetConnections().ToArray();
+			Task<RpcResponse>[] sendTasks = new Task<RpcResponse>[connections.Length];
+			for (int i = 0; i < connections.Length; i++)
 			{
-				// List<Task<RpcResponse>> sendTasks = new List<Task<RpcResponse>>();
-				// foreach (Connection connection in server.GetConnections())
-				// {
-				// 	sendTasks.Add(connection.SendAsync<RpcResponse, RpcRequest>(request));
-				// }
-				Connection[] connections = server.GetConnections().ToArray();
-				RpcResponse[] responses = new RpcResponse[connections.Length];
-				for (int i = 0; i < connections.Length; i++)
-				{
-					responses[i] = await connections[i].SendAsync<RpcResponse, RpcRequest>(request);
-				}
-				// RpcResponse[]? responses = await Task.WhenAll(sendTasks.ToArray());
-				List<T> results = new List<T>();
-				foreach (RpcResponse? response in responses)
-				{
-					if (response.Error != RPC_ERROR.None)
-					{
-						Log.Warn("RPC encountered error: {0}", response.Error);
-					}
-					T result = (T)response.Result;
-					if (result == null)
-					{
-						Log.Warn("Result was null");
-					}
-					results.Add(result);
-				}
-				return results.ToArray();
+				sendTasks[i] = connections[i].SendAsync<RpcResponse, RpcRequest>(request);
 			}
-			return Array.Empty<T>();
+			RpcResponse[]? responses = await Task.WhenAll(sendTasks);
+			T[] results = new T[responses.Length];
+			for (int i = 0; i < responses.Length; i++)
+			{
+				RpcResponse response = responses[i];
+				if (response.Error != RPC_ERROR.None)
+				{
+					Log.Warn("RPC encountered error: {0}", response.Error);
+				}
+				T result = (T)response.Result;
+				if (result == null)
+				{
+					Log.Warn("Result was null");
+				}
+				results[i] = result;
+			}
+			return results;
 		}
 		
 		public override void Call(Type type, string method, params object[] args)
@@ -119,7 +113,8 @@ namespace EzRpc
 		
 		private void OnConnectionAdded(int obj)
 		{
-			if (Tcp.TryGetConnection(obj, out Connection connection))
+			if (Tcp?.TryGetConnection(obj, out Connection connection) == true ||
+			    Udp?.TryGetConnection(obj, out connection) == true)
 			{
 				RpcClient client = new RpcClient(connection, null, Session);
 				_clients.Add(client);

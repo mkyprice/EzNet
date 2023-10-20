@@ -1,4 +1,5 @@
-﻿using EzRpc.Serialization.Extensions;
+﻿using EzNet.IO.Extensions;
+using EzRpc.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace EzRpc.Serialization
 				object v = field.GetValue(value);
 				if (IsPrimitive(field.FieldType))
 				{
-					stream.WriteObject(v);
+					stream.WritePrimitive(v);
 				}
 				else
 				{
@@ -44,7 +45,7 @@ namespace EzRpc.Serialization
 				object v;
 				if (IsPrimitive(field.FieldType))
 				{
-					v = stream.Read(field.FieldType);
+					v = stream.ReadPrimitive(field.FieldType);
 				}
 				else
 				{

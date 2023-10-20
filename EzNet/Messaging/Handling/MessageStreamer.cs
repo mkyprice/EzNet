@@ -38,13 +38,14 @@ namespace EzNet.Messaging.Handling
 			while (ms.Position < ms.Length)
 			{
 				if (PacketExtension.TryReadType(ms, out Type type) && 
-				    _container.TryGetValue(type, out var handler))
+				    _container.TryGetValue(type, out IMessageCodec handler))
 				{
 					handler.ReadPacket(ms, source);
 				}
 				else
 				{
-					Log.Warn("No message handler for packet type {0}", type);
+					Log.Warn("No message handler for packet type {0}. Bytes: {1}", type, ms.Length);
+					// TODO: Add message queue for unsubscribed messages
 				}
 			}
 		}
