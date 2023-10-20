@@ -11,7 +11,7 @@ namespace EzNet.Messaging.Extensions
 {
 	internal static class PacketExtension
 	{
-		private static readonly BiDiDictionary<int, Type> _packetKeys = new BiDiDictionary<int, Type>();
+		private static readonly BiDiDictionary<string, Type> _packetKeys = new BiDiDictionary<string, Type>();
 		private static bool _isInitialized = false;
 		public static void Init()
 		{
@@ -43,15 +43,15 @@ namespace EzNet.Messaging.Extensions
 				}
 				if (can_create)
 				{
-					int key;
+					string key;
 					var attrib = type.GetCustomAttribute<PacketAttribute>();
 					if (attrib != null && string.IsNullOrEmpty(attrib.Id) == false)
 					{
-						key = attrib.Id.GetHashCode();
+						key = attrib.Id;
 					}
 					else
 					{
-						key = type.Name.GetHashCode();
+						key = type.Name;
 					}
 					_packetKeys[key] = type;
 					Log.Debug("Cached packet type {0}", type);
@@ -107,8 +107,8 @@ namespace EzNet.Messaging.Extensions
 		}
 
 
-		public static bool TryReadType(Stream? stream, out Type type) => _packetKeys.TryGetValue(stream.ReadInt(), out type);
+		public static bool TryReadType(Stream? stream, out Type type) => _packetKeys.TryGetValue(stream.ReadString(), out type);
 		private static void WriteType(Stream? stream, in Type type) => stream.Write(GetKey(type));
-		private static int GetKey(in Type type) => _packetKeys[type];
+		private static string GetKey(in Type type) => _packetKeys[type];
 	}
 }

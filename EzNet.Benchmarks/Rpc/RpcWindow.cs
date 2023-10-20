@@ -22,12 +22,22 @@ namespace EzNet.Benchmarks
 			Rpc.Tcp = ConnectionFactory.BuildClient(GameServer.TCP, true);
 		}
 
+		protected override void Update()
+		{
+			// foreach (GameObject gameObject in State.Gameobjects.Values)
+			// {
+			// 	Vector2 p = gameObject.Position + gameObject.Velocity * Raylib.GetFrameTime();
+			// 	State.SetPosition(gameObject.Id, p);
+			// }
+		}
+
 		protected override void Render()
 		{
 			foreach (GameObject gameobject in State.Gameobjects.Values)
 			{
 				Raylib.DrawCircleV(gameobject.Position, 16, gameobject.Color);
 			}
+			Raylib.DrawFPS(16, 16);
 		}
 	}
 }

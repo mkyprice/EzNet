@@ -2,6 +2,7 @@ using EzNet.Benchmarks.State;
 using EzNet.Transports.Extensions;
 using EzRpc;
 using Raylib_cs;
+using System.Diagnostics;
 using System.Net;
 using System.Numerics;
 
@@ -24,15 +25,14 @@ namespace EzNet.Benchmarks
 			Rpc.Bind(State);
 			
 			Rpc.OnClientConnected += OnClientConnected;
-			BuildWorld();
 		}
 
 		private void BuildWorld()
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 1000; i++)
 			{
 				Vector2 pos = GetRandomVector(Bounds.width, Bounds.height);
-				Vector2 velocity = GetRandomVector(1, 1) * 100;
+				Vector2 velocity = GetRandomVector(1, 1) * 200;
 				GameObject gameObject = new GameObject()
 				{
 					Id = Random.Shared.Next(),
@@ -52,15 +52,23 @@ namespace EzNet.Benchmarks
 
 		public void Run()
 		{
+			BuildWorld();
 			Task.Run(MainLoop);
 		}
 
 		public async Task MainLoop()
 		{
-			const float dt = 1f / 60;
+			const float DT = 1f / 30;
+
+			float dt = DT;
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
 			while (_isDisposed == false)
 			{
-				await Task.Delay(10);
+				await Task.Delay(1);
+				sw.Stop();
+				dt = sw.ElapsedMilliseconds / 60f;
+				sw.Restart();
 			
 				if (Rpc.Connections > 0)
 				{
@@ -70,11 +78,11 @@ namespace EzNet.Benchmarks
 						Rpc.Call<GameState>(nameof(GameState.SetPosition), gameObject.Id, p);
 			
 						Vector2 velocity = gameObject.Velocity;
-						if (p.X <= Bounds.x || p.Y <= Bounds.y)
+						if (p.X <= Bounds.x || p.X >= Bounds.width)
 						{
 							velocity.X *= -1;
 						}
-						if (p.X >= Bounds.width || p.Y >= Bounds.height)
+						if (p.Y <= Bounds.y || p.Y >= Bounds.height)
 						{
 							velocity.Y *= -1;
 						}

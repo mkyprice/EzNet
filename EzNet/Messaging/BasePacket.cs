@@ -16,12 +16,19 @@ namespace EzNet.Messaging
 		protected abstract void Write();
 		protected abstract void Read();
 
+		public int PeekLength(Stream stream)
+		{
+			short len = stream.ReadShort();
+			stream.Position -= sizeof(short);
+			return len;
+		}
+
 		public void Write(Stream stream)
 		{
 			BaseStream = stream;
 			long pos = BaseStream.Position;
 			// Save room for packet length
-			BaseStream.Position += sizeof(ushort);
+			BaseStream.Position += sizeof(uint);
 			// Write Error message
 			BaseStream.Write((byte)Error);
 			// Write packet data
@@ -29,7 +36,7 @@ namespace EzNet.Messaging
 			// Write packet length
 			long curr = BaseStream.Position;
 			BaseStream.Position = pos;
-			Write((ushort)(curr - pos));
+			Write((uint)(curr - pos));
 			BaseStream.Position = curr;
 			BaseStream = null;
 		}
@@ -38,14 +45,14 @@ namespace EzNet.Messaging
 		{
 			BaseStream = stream;
 			long pos = BaseStream.Position;
-			int length = ReadUShort();
+			uint length = ReadUInt();
 			long finalPos = pos + length;
 			Error = (PACKET_ERROR)ReadByte();
 			Read();
 			if (BaseStream.Position != finalPos)
 			{
 				Log.Warn("Misread packet {0}. Read {1} bytes. Should be {2}", 
-					this, finalPos - BaseStream.Position, length);
+					this, BaseStream.Position - pos, length);
 				BaseStream.Position = finalPos;
 			}
 			BaseStream = null;

@@ -34,11 +34,16 @@ namespace EzNet.Transports.Udp
 		}
 		public bool Send(byte[] bytes)
 		{
-			int sent = _transport.SendTo(bytes, SocketFlags.None, _endPoint);
-			if (sent <= 0)
+			int total = 0;
+			while (total < bytes.Length)
 			{
-				OnDisconnect?.Invoke(this);
-				return false;
+				int sent = _transport.SendTo(bytes, SocketFlags.None, _endPoint);
+				if (sent <= 0)
+				{
+					OnDisconnect?.Invoke(this);
+					return false;
+				}
+				total += sent;
 			}
 			return true;
 		}

@@ -1,8 +1,10 @@
+using EzNet.Messaging;
 using EzNet.Tests.Models;
 using EzNet.Transports.Extensions;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace EzNet.Tests.Unit;
 
@@ -77,5 +79,66 @@ public class AsyncSendTests
 			Assert.IsTrue(server_responses.Any(t => tv.Equals(t)));
 		}
 		Console.WriteLine("Total time: {0}ms", sw.ElapsedMilliseconds);
+	}
+
+
+	class LargePacket : BasePacket
+	{
+		public byte[] Big;
+		
+		protected override void Write()
+		{
+			Write((int)Big.Length);
+			Write(Big);
+		}
+		protected override void Read()
+		{
+			int len = ReadInt();
+			Big = ReadBytes(len);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (obj is LargePacket p == false ||
+			    p.Big?.Length != Big?.Length)
+			{
+				return false;
+			}
+			for (int i = 0; i < Big.Length; i++)
+			{
+				if (Big[i] != p.Big[i]) return false;
+			}
+			return true;
+		}
+	}
+	[DataTestMethod]
+	[DataRow(true)]
+	[DataRow(false)]
+	[DoNotParallelize]
+	public async Task LargeSend(bool reliable)
+	{
+		EndPoint ep = SocketExtensions.GetEndPoint(5012, AddressFamily.InterNetwork);
+		using Server server = ConnectionFactory.BuildServer(ep, reliable);
+		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
+		Assert.IsTrue(client.IsConnected);
+		
+		server.RegisterResponseHandler((LargePacket p) => p);
+
+		
+		LargePacket packet = new LargePacket();
+		packet.Big = new byte[100000];
+		for (int i = 0; i < packet.Big.Length; i++)
+		{
+			packet.Big[i] = (byte)(i % 2);
+		}
+
+		using (MemoryStream ms = new MemoryStream())
+		{
+			packet.Write(ms);
+			Console.WriteLine("Sending: {0} bytes", ms.Length);
+		}
+
+		LargePacket response = await client.SendAsync<LargePacket, LargePacket>(packet);
+		Assert.AreEqual(packet, response);
 	}
 }

@@ -165,9 +165,9 @@ namespace EzNet.Messaging.Handling
 			{
 				while (IsDisposed == false)
 				{
-					foreach (IMessageCodec handler in _container.GetCodecs())
+					foreach (IMessageCodec codec in _container.GetCodecs())
 					{
-						handler.Update();
+						codec.Update();
 					}
 					await Task.Delay(1);
 				}

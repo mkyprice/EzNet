@@ -6,6 +6,7 @@ namespace EzNet.Benchmarks
 	{
 		public Window(int width, int height, string title)
 		{
+			Raylib.SetConfigFlags(ConfigFlags.FLAG_VSYNC_HINT);
 			Raylib.InitWindow(width, height, title);
 		}
 

@@ -32,6 +32,11 @@ namespace EzNet.Messaging.Handling
 				_callback -= callback;
 			}
 		}
+		
+		public void Enqueue(BasePacket packet, Connection source) => 
+			_receivePacketQueue.Enqueue(new MessageNotification<T>((T)packet, source));
+		
+		public BasePacket CreatePacket() => new T();
 
 		public void Update()
 		{
@@ -62,14 +67,6 @@ namespace EzNet.Messaging.Handling
 				await Task.Yield();
 			}
 			return packet;
-		}
-		
-		public void ReadPacket(Stream? stream, Connection source)
-		{
-			T packet = new T();
-			packet.Read(stream);
-			// Log.Info("Read packet {0}", packet);
-			_receivePacketQueue.Enqueue(new MessageNotification<T>(packet, source));
 		}
 	}
 }
