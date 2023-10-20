@@ -12,8 +12,5 @@
     <ItemGroup>
       <ProjectReference Include="..\EzNet\EzNet.csproj" />
     </ItemGroup>
-
-
-
-
+    
 </Project>

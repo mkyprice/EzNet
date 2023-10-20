@@ -8,18 +8,7 @@ namespace EzRPC.Reflection.Core
 	{
 		private readonly Dictionary<Type, MethodCache> _caches = new Dictionary<Type, MethodCache>();
 
-		public MethodCache this[Type type]
-		{
-			get
-			{
-				if (_caches.TryGetValue(type, out MethodCache cache))
-				{
-					return cache;
-				}
-				Log.Warn("Tried to get unbound cache {0}", type);
-				return null;
-			}
-		}
+		public bool TryGetMethodCache(Type type, out MethodCache cache) => _caches.TryGetValue(type, out cache);
 
 		public bool Contains(Type type) => _caches.ContainsKey(type);
 

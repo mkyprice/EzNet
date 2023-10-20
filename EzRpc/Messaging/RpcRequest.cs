@@ -1,5 +1,6 @@
 ﻿using EzNet.Messaging;
 using EzRpc.Serialization;
+using EzRpc.Serialization.Extensions;
 using System;
 
 namespace EzRpc.Messaging
@@ -18,8 +19,7 @@ namespace EzRpc.Messaging
 			Write(Args?.Length ?? 0);
 			for (int i = 0; i < Args?.Length; i++)
 			{
-				Write(Args[i].GetType().AssemblyQualifiedName);
-				new EzSerializer().Serialize(BaseStream, Args[i]);
+				BaseStream.Serialize(Args[i]);
 			}
 		}
 		protected override void Read()
@@ -31,12 +31,7 @@ namespace EzRpc.Messaging
 			Args = new object[len];
 			for (int i = 0; i < Args.Length; i++)
 			{
-				typeStr = ReadString();
-				Type argType = Type.GetType(typeStr);
-				if (argType != null)
-				{
-					Args[i] = new EzSerializer().Deserialize(BaseStream, argType);
-				}
+				Args[i] = BaseStream.Deserialize();
 			}
 		}
 	}

@@ -5,27 +5,62 @@ using EzRpc.Messaging;
 using EzRpc.State;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EzRpc
 {
 	public class RpcServer : Rpc
 	{
+		#region Events
+
+		public Action<RpcClient> OnClientConnected;
+
+		#endregion
+		
+		public int Connections { get => _clients.Count; }
 		private readonly List<RpcClient> _clients = new List<RpcClient>();
-		protected new Server Tcp;
-		protected new Server Udp;
-		
-		public RpcServer(Server tcp, Server udp) : this(tcp, udp, new ServiceProvider())
+		public new Server? Tcp
 		{
+			get => base.Tcp as Server;
+			set
+			{
+				base.Tcp = value;
+				if (value != null)
+				{
+					value.OnConnectionAdded += OnConnectionAdded;
+				}
+			}
 		}
-		
-		public RpcServer(Server tcp, Server udp, ServiceProvider services) : base(tcp, udp, new RpcSession(), services)
+		public new Server? Udp
 		{
-			Tcp = tcp;
-			Udp = udp;
-			tcp.OnConnectionAdded += OnConnectionAdded;
+			get => base.Udp as Server;
+			set
+			{
+				base.Udp = value;
+				if (value != null)
+				{
+					value.OnConnectionAdded += OnConnectionAdded;
+				}
+			}
 		}
+
+		public RpcServer() : base(new RpcSession())
+		{ }
+
+		public RpcServer(Server tcp, Server udp) : base(tcp, udp, new RpcSession())
+		{ }
+
+		/// <summary>
+		/// Calls a method on all connections
+		/// </summary>
+		/// <param name="method"></param>
+		/// <param name="args"></param>
+		/// <typeparam name="T"></typeparam>
+		/// <typeparam name="TR"></typeparam>
+		/// <returns></returns>
+		public async Task<TR[]> CallAsync<T, TR>(string method, params object[] args)
+			=> await CallAsync<TR>(typeof(T), method, args);
 
 		/// <summary>
 		/// Calls a method on all connections
@@ -37,36 +72,20 @@ namespace EzRpc
 		/// <returns></returns>
 		public async Task<T[]> CallAsync<T>(Type type, string method, params object[] args)
 		{
-			MethodInfo? info = Session.GetMethod(type, method);
-			Synced? sync = Session.GetMethodSyncData(type, method);
-			if (info == null || sync == null)
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) == false ||
+			    (sender is Server server) == false) return Array.Empty<T>();
+			
+			Connection[] connections = server.GetConnections().ToArray();
+			Task<RpcResponse>[] sendTasks = new Task<RpcResponse>[connections.Length];
+			for (int i = 0; i < connections.Length; i++)
 			{
-				Log.Warn("No bound instance for type {0}", type);
-				return default;
+				sendTasks[i] = connections[i].SendAsync<RpcResponse, RpcRequest>(request);
 			}
-			// Local
-			if (sync.CallLocal)
+			RpcResponse[]? responses = await Task.WhenAll(sendTasks);
+			T[] results = new T[responses.Length];
+			for (int i = 0; i < responses.Length; i++)
 			{
-				CallMethod(type, method, args);
-			}
-
-			// Send request
-			Server sender = sync.IsReliable ? Tcp : Udp;
-			RpcRequest request = new RpcRequest()
-			{
-				Type = type,
-				Method = method,
-				Args = args
-			};
-			List<Task<RpcResponse>> sendTasks = new List<Task<RpcResponse>>();
-			foreach (Connection connection in sender.GetConnections())
-			{
-				sendTasks.Add(connection.SendAsync<RpcResponse, RpcRequest>(request));
-			}
-			var responses = await Task.WhenAll(sendTasks.ToArray());
-			List<T> results = new List<T>();
-			foreach (var response in responses)
-			{
+				RpcResponse response = responses[i];
 				if (response.Error != RPC_ERROR.None)
 				{
 					Log.Warn("RPC encountered error: {0}", response.Error);
@@ -76,17 +95,31 @@ namespace EzRpc
 				{
 					Log.Warn("Result was null");
 				}
-				results.Add(result);
+				results[i] = result;
 			}
-			return results.ToArray();
+			return results;
+		}
+		
+		public override void Call(Type type, string method, params object[] args)
+		{
+			if (HandleLocalCall(type, method, args, out RpcRequest request, out Network sender) &&
+			    sender is Server server)
+			{
+				foreach (Connection connection in server.GetConnections())
+				{
+					connection.Send(request);
+				}
+			}
 		}
 		
 		private void OnConnectionAdded(int obj)
 		{
-			if (Tcp.TryGetConnection(obj, out Connection connection))
+			if (Tcp?.TryGetConnection(obj, out Connection connection) == true ||
+			    Udp?.TryGetConnection(obj, out connection) == true)
 			{
-				RpcClient client = new RpcClient(connection, null, Session, Services);
+				RpcClient client = new RpcClient(connection, null, Session);
 				_clients.Add(client);
+				OnClientConnected?.Invoke(client);
 			}
 		}
 	}

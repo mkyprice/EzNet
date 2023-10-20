@@ -1,5 +1,6 @@
 ﻿using EzNet.Messaging;
 using EzRpc.Serialization;
+using EzRpc.Serialization.Extensions;
 using System;
 
 namespace EzRpc.Messaging
@@ -12,18 +13,12 @@ namespace EzRpc.Messaging
 		protected override void Write()
 		{
 			Write((byte)Error);
-			Write(Result?.GetType().AssemblyQualifiedName ?? string.Empty);
-			new EzSerializer().Serialize(BaseStream, Result);
+			BaseStream.Serialize(Result);
 		}
 		protected override void Read()
 		{
 			Error = (RPC_ERROR)ReadByte();
-			string typeStr = ReadString();
-			Type argType = Type.GetType(typeStr);
-			if (argType != null)
-			{
-				Result = new EzSerializer().Deserialize(BaseStream, argType);
-			}
+			Result = BaseStream.Deserialize();
 		}
 	}
 }

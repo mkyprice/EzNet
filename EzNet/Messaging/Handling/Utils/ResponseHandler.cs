@@ -14,7 +14,6 @@ namespace EzNet.Messaging.Handling.Utils
 		where TResponse : BasePacket, new()
 	{
 		private readonly Func<TRequest, TResponse> _function;
-		
 		public ResponseHandler(Func<TRequest, TResponse> function)
 		{
 			_function = function;
@@ -34,7 +33,10 @@ namespace EzNet.Messaging.Handling.Utils
 				{
 					Log.Error("Response function: <{0}, {1}> encountered error: {2}\nTrace: - {3}", 
 						typeof(TResponse), typeof(TRequest), e.Message, e.StackTrace);
-					response = new ErrorPacket(PACKET_ERROR.BadResponse);
+					response = new TResponse()
+					{
+						Error = PACKET_ERROR.BadResponse
+					};
 				}
 				ResponsePacket responsePacket = new ResponsePacket(response, requestPacket.RequestId);
 				if (source.Send(responsePacket) == false)
@@ -42,6 +44,11 @@ namespace EzNet.Messaging.Handling.Utils
 					Log.Warn("Failed to send response {0}", response);
 				}
 			}
+		}
+		
+		public override bool Equals(object? obj)
+		{
+			return obj is ResponseHandler<TRequest, TResponse> rh && rh._function == _function;
 		}
 	}
 }

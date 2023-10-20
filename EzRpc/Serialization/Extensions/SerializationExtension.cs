@@ -1,13 +1,54 @@
 using EzNet.IO.Extensions;
 using EzNet.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 
 namespace EzRpc.Serialization.Extensions
 {
 	public static class SerializationExtension
 	{
-		public static void WriteObject(this Stream stream, object value)
+		private static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>();
+		
+		public static void Serialize(this Stream stream, object value)
+		{
+			Type type = value.GetType();
+			string fullname = type.FullName;
+			TypeCache[fullname] = type;
+			stream.Write(fullname);
+			Rpc.GetSerializer(type).Serialize(stream, value);
+		}
+
+		public static object? Deserialize(this Stream stream)
+		{
+			string fullname = stream.ReadString();
+			if (fullname != null)
+			{
+				Type type;
+				if (TypeCache.TryGetValue(fullname, out type) == false)
+				{
+					try
+					{
+						type = Type.GetType(fullname, true);
+					}
+					catch (Exception e)
+					{
+						Log.Warn("Failed to find type {0}\n{1}\n{2}", fullname, e.Message, e.StackTrace);
+					}
+					if (type != null)
+					{
+						TypeCache[fullname] = type;
+					}
+				}
+				if (type != null)
+				{
+					return Rpc.GetSerializer(type).Deserialize(stream, type);
+				}
+			}
+			return null;
+		}
+		
+		public static void WritePrimitive(this Stream stream, object value)
 		{
 			switch (value)
 			{
@@ -65,7 +106,7 @@ namespace EzRpc.Serialization.Extensions
 			}
 		}
 
-		public static object Read(this Stream stream, Type type)
+		public static object ReadPrimitive(this Stream stream, Type type)
 		{
 			TypeCode tc = Type.GetTypeCode(type);
 			switch (tc)

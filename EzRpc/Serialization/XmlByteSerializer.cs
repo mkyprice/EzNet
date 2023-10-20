@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EzRpc.Serialization.Extensions;
+using System;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -11,13 +12,24 @@ namespace EzRpc.Serialization
 			if (value != null)
 			{
 				Type type = value.GetType();
-				XmlSerializer serializer = new XmlSerializer(type);
-				serializer.Serialize(stream, value);
+				if (type.IsPrimitive)
+				{
+					stream.WritePrimitive(value);
+				}
+				else
+				{
+					XmlSerializer serializer = new XmlSerializer(type);
+					serializer.Serialize(stream, value);
+				}
 			}
 		}
 		
 		public object Deserialize(Stream stream, Type type)
 		{
+			if (type.IsPrimitive)
+			{
+				return stream.ReadPrimitive(type);
+			}
 			XmlSerializer serializer = new XmlSerializer(type);
 			return serializer.Deserialize(stream);
 		}

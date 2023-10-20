@@ -1,4 +1,5 @@
-﻿using EzRpc.Serialization.Extensions;
+using EzNet.Logging;
+using EzRpc.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,7 +24,7 @@ namespace EzRpc.Serialization
 				object v = field.GetValue(value);
 				if (IsPrimitive(field.FieldType))
 				{
-					stream.WriteObject(v);
+					stream.WritePrimitive(v);
 				}
 				else
 				{
@@ -37,6 +38,7 @@ namespace EzRpc.Serialization
 			object? value = type?.NewInstance();
 			if (value == null)
 			{
+				Log.Warn("Failed to create instance of {0}", type);
 				return default;
 			}
 			foreach (FieldInfo field in GetFields(type))
@@ -44,7 +46,7 @@ namespace EzRpc.Serialization
 				object v;
 				if (IsPrimitive(field.FieldType))
 				{
-					v = stream.Read(field.FieldType);
+					v = stream.ReadPrimitive(field.FieldType);
 				}
 				else
 				{

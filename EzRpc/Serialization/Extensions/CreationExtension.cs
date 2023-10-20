@@ -23,16 +23,25 @@ namespace EzRpc.Serialization.Extensions
 			{
 				return null;
 			}
+			Func<object> create = GetOrCreate(type);
+			return create();
+		}
+		
+		public static Func<object> GetOrCreate(Type type)
+		{
 			Func<object> create;
 			if (CreationCache.TryGetValue(type, out create) == false)
 			{
 				create = GetActivator(type);
 				CreationCache[type] = create;
 			}
-			return create();
+			return create;
 		}
 
-		private static Func<object> GetActivator(Type type)
+		public static Func<T> GetActivator<T>()
+			=> Expression.Lambda<Func<T>>(Expression.New(typeof(T))).Compile();
+		
+		public static Func<object> GetActivator(Type type)
 			=> Expression.Lambda<Func<object>>(Expression.New(type)).Compile();
 	}
 }

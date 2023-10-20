@@ -13,30 +13,58 @@ namespace EzNet.Tests.Unit
 		public async Task BasicRpcTest()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8989);
-			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
-			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
 
-			server.Bind<BasicRpc>();
+			BasicRpc rpcClass = new BasicRpc();
+			server.Bind(rpcClass);
 			client.Bind<BasicRpc>();
 
 			float result = await client.CallAsync<float>(typeof(BasicRpc), nameof(BasicRpc.Test), 1, 2);
-			Assert.AreEqual(new BasicRpc().Test(1, 2), result);
+			Assert.AreEqual(rpcClass.Test(1, 2), result);
 		}
 		
 		
 		[TestMethod]
-		public async Task AdvancedRpcTest()
+		public async Task ServerToClientCall()
 		{
 			EndPoint ep = SocketExtensions.GetEndPoint(8990);
-			using RpcServer server = new RpcServer(ConnectionFactory.BuildServer(ep, true), null);
-			using RpcClient client = new RpcClient(ConnectionFactory.BuildClient(ep, true), null);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
 
-			server.Bind<BasicRpc>();
+			BasicRpc rpcClass = new BasicRpc();
+			server.Bind(rpcClass);
 			client.Bind<BasicRpc>();
 
 			TestValues sent = new TestValues();
-			TestValues result = await client.CallAsync<TestValues>(typeof(BasicRpc), nameof(BasicRpc.TestAdvanced), sent);
+			TestValues result = await client.CallAsync<BasicRpc, TestValues>(nameof(BasicRpc.TestAdvanced), sent);
 			Assert.AreEqual(sent, result);
+		}
+		
+		
+		[TestMethod]
+		public async Task ClientToServerCall()
+		{
+			EndPoint ep = SocketExtensions.GetEndPoint(8991);
+			using RpcServer server = new RpcServer();
+			server.Tcp = ConnectionFactory.BuildServer(ep, true);
+			using RpcClient client = new RpcClient();
+			client.Tcp = ConnectionFactory.BuildClient(ep, true);
+
+			BasicRpc rpcClass = new BasicRpc();
+			server.Bind<BasicRpc>();
+			client.Bind(rpcClass);
+
+			TestValues sent = new TestValues();
+			TestValues[] result = await server.CallAsync<BasicRpc, TestValues>(nameof(BasicRpc.TestAdvanced), sent);
+			foreach (TestValues received in result)
+			{
+				Assert.AreEqual(sent, received);
+			}
 		}
 	}
 }

@@ -31,14 +31,14 @@ namespace EzNet.Messaging.Handling
 		{
 			_container = container;
 			_streamer = streamer;
-			MessageHandlerTask = Task.Run(HandleMessageLoop);
+			MessageHandlerTask = Task.Factory.StartNew(HandleMessageLoop, TaskCreationOptions.LongRunning);
 		}
 
 		public static MessageHandler Build(IMessageContainer? container = null, IMessageStreamer? streamer = null)
 		{
 			PacketExtension.Init();
-			IMessageContainer c = container == null ? new MessageContainer() : container;
-			IMessageStreamer s = streamer == null ? new MessageStreamer(c) : streamer;
+			IMessageContainer c = container ?? new MessageContainer();
+			IMessageStreamer s = streamer ?? new MessageStreamer(c);
 			return new MessageHandler(c, s);
 		}
 		public void AddCallback<T>(Action<T, Connection> callback) where T : BasePacket, new()
@@ -83,15 +83,13 @@ namespace EzNet.Messaging.Handling
 					{
 						taskCompletionSource.SetResult(r);
 					}
-					else if (responsePacket.Response is ErrorPacket error)
-					{
-						Log.Error("Encountered error with message {0}", error.ErrorCode);
-						taskCompletionSource.SetResult(default);
-					}
 					else
 					{
 						Log.Error("Received incorrect response type {0}", responsePacket.Response);
-						taskCompletionSource.SetResult(default);
+						taskCompletionSource.SetResult(new TResponse()
+						{
+							Error = PACKET_ERROR.BadResponse
+						});
 					}
 				}
 			}
@@ -103,11 +101,22 @@ namespace EzNet.Messaging.Handling
 			if (sendFunc(requestPacket))
 			{
 				response = await AwaitTaskOrTimeout(taskCompletionSource, timeoutMs);
+				if (response == null)
+				{
+					Log.Warn("Send timed out {0}", request);
+					response = new TResponse()
+					{
+						Error = PACKET_ERROR.Timeout
+					};
+				}
 			}
 			else
 			{
-				Log.Error("Failed to send request {0}. Please check your connection", request);
-				response = default;
+				Log.Error("Failed to send request {0}", request);
+				response = new TResponse()
+				{
+					Error = PACKET_ERROR.SendFailed
+				};
 			}
 			
 			
