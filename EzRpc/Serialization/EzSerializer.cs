@@ -1,5 +1,5 @@
-﻿using EzNet.IO.Extensions;
-using EzRpc.Serialization.Extensions;
+using EzNet.Logging;
+using EzNet.Serialization.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +38,7 @@ namespace EzRpc.Serialization
 			object? value = type?.NewInstance();
 			if (value == null)
 			{
+				Log.Warn("Failed to create instance of {0}", type);
 				return default;
 			}
 			foreach (FieldInfo field in GetFields(type))
