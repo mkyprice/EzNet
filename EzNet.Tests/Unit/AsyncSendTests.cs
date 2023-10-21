@@ -84,52 +84,51 @@ public class AsyncSendTests
 
 	class LargePacket : BasePacket
 	{
-		public byte[] Big;
+		public byte[] Data;
 		
 		protected override void Write()
 		{
-			Write((int)Big.Length);
-			Write(Big);
+			Write((int)Data.Length);
+			Write(Data);
 		}
 		protected override void Read()
 		{
 			int len = ReadInt();
-			Big = ReadBytes(len);
+			Data = ReadBytes(len);
 		}
 
 		public override bool Equals(object? obj)
 		{
 			if (obj is LargePacket p == false ||
-			    p.Big?.Length != Big?.Length)
+			    p.Data?.Length != Data?.Length)
 			{
 				return false;
 			}
-			for (int i = 0; i < Big.Length; i++)
+			for (int i = 0; i < Data.Length; i++)
 			{
-				if (Big[i] != p.Big[i]) return false;
+				if (Data[i] != p.Data[i]) return false;
 			}
 			return true;
 		}
 	}
 	[DataTestMethod]
-	[DataRow(true)]
-	[DataRow(false)]
+	[DataRow(true, 5012, 1_000_000)]
+	[DataRow(false, 5013, 1_000_000)]
 	[DoNotParallelize]
-	public async Task LargeSend(bool reliable)
+	public async Task LargeSend(bool reliable, int port, int size)
 	{
-		EndPoint ep = SocketExtensions.GetEndPoint(5012, AddressFamily.InterNetwork);
+		EndPoint ep = SocketExtensions.GetEndPoint(port, AddressFamily.InterNetwork);
 		using Server server = ConnectionFactory.BuildServer(ep, reliable);
 		using Connection client = ConnectionFactory.BuildClient(ep, reliable);
 		Assert.IsTrue(client.IsConnected);
 		
 		server.RegisterResponseHandler((LargePacket p) => p);
-
 		
 		LargePacket packet = new LargePacket();
-		packet.Big = new byte[100000];
-		for (int i = 0; i < packet.Big.Length; i++)
+		packet.Data = new byte[size];
+		for (int i = 0; i < packet.Data.Length; i++)
 		{
-			packet.Big[i] = (byte)(i % 2);
+			packet.Data[i] = (byte)(i % 2);
 		}
 
 		using (MemoryStream ms = new MemoryStream())
@@ -138,7 +137,14 @@ public class AsyncSendTests
 			Console.WriteLine("Sending: {0} bytes", ms.Length);
 		}
 
-		LargePacket response = await client.SendAsync<LargePacket, LargePacket>(packet);
+		Stopwatch sw = new Stopwatch();
+		sw.Start();
+		LargePacket response = await client.SendAsync<LargePacket, LargePacket>(packet, -1);
+		sw.Stop();
+		Console.WriteLine("Took {0}ms", sw.ElapsedMilliseconds);
 		Assert.AreEqual(packet, response);
+		
+		client.Dispose();
+		server.Dispose();
 	}
 }

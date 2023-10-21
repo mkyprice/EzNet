@@ -11,6 +11,8 @@ namespace EzNet.Messaging.Extensions
 {
 	internal static class PacketExtension
 	{
+		public static readonly string REQUEST_ID = "REQUEST_ID";
+		
 		private static readonly BiDiDictionary<string, Type> _packetKeys = new BiDiDictionary<string, Type>();
 		private static bool _isInitialized = false;
 		public static void Init()
@@ -66,49 +68,46 @@ namespace EzNet.Messaging.Extensions
 		public static void Serialize<T>(Stream stream, T packet) 
 			where T : BasePacket
 		{
+			long start = stream.Position;
+			stream.Position += sizeof(uint);
+			
+			// Write packet
 			Type type = packet?.GetType() ?? typeof(T);
 			WriteType(stream, type);
 			packet?.Write(stream);
+
+			// Calculate and write packet size
+			long end = stream.Position;
+			uint size = (uint)(end - start);
+			stream.Position = start;
+			stream.Write(size);
+			stream.Position = end;
 		}
 
-		public static BasePacket Deserialize(Stream stream)
+		public static BasePacket? Deserialize(Stream stream)
 		{
-			if (TryReadType(stream, out Type type))
+			long start = stream.Position;
+			uint length = stream.ReadUInt();
+			if (stream.Length >= length && TryReadType(stream, out Type type))
 			{
-				BasePacket packet = (BasePacket)Activator.CreateInstance(type);
+				BasePacket packet = (BasePacket)type.NewInstance();
 				if (packet != null)
 				{
 					packet.Read(stream);
 					return packet;
 				}
 			}
+			stream.Position = start + length;
 			return null;
 		}
 
-		public static IEnumerable<BasePacket> Deserialize(ArraySegment<byte> seg)
-		{
-			if (seg.Array == null)
-			{
-				Log.Warn("Tried to deserialize a null array");
-				yield break;
-			} 
-			byte[] bytes = seg.Array;
-			using (var ms = new MemoryStream(bytes))
-			{
-				while (ms.Position + sizeof(int) < seg.Count)
-				{
-					BasePacket? packet = Deserialize(ms);
-					if (packet != null)
-					{
-						yield return packet;
-					}
-				}
-			}
-		}
-
-
-		public static bool TryReadType(Stream? stream, out Type type) => _packetKeys.TryGetValue(stream.ReadString(), out type);
-		private static void WriteType(Stream? stream, in Type type) => stream.Write(GetKey(type));
-		private static string GetKey(in Type type) => _packetKeys[type];
+		public static bool TryReadType(Stream stream, out Type type) 
+			=> _packetKeys.TryGetValue(stream.ReadString(), out type);
+		
+		private static void WriteType(Stream stream, in Type type) 
+			=> stream.Write(GetKey(type));
+		
+		private static string GetKey(in Type type) 
+			=> _packetKeys[type];
 	}
 }

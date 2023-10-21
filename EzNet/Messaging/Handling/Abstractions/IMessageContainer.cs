@@ -17,7 +17,7 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		public MessageCodec<T> GetOrCreateMessageHandler<T>() where T : BasePacket, new();
+		public MessageQueue<T> GetOrCreateMessageHandler<T>() where T : BasePacket, new();
 		
 		/// <summary>
 		/// Get message codec by type
@@ -25,13 +25,13 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <param name="type"></param>
 		/// <param name="value"></param>
 		/// <returns></returns>
-		public bool TryGetValue(Type type, out IMessageCodec value);
+		public bool TryGetValue(Type type, out IMessageQueue value);
 		
 		/// <summary>
 		/// Get all current Message Codecs
 		/// </summary>
 		/// <returns></returns>
-		public IEnumerable<IMessageCodec> GetCodecs();
+		public IEnumerable<IMessageQueue> GetMessageQueues();
 		
 		/// <summary>
 		/// Number of packets of given type that are queued

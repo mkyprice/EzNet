@@ -1,7 +1,6 @@
-﻿using EzNet.IO;
-using EzNet.IO.Extensions;
-using EzNet.Logging;
+﻿using EzNet.IO.Extensions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -10,52 +9,55 @@ namespace EzNet.Messaging
 	public abstract class BasePacket : IDisposable
 	{
 		public static Encoding Encoding = Encoding.UTF8;
+		public Dictionary<string, string> Meta { get; set; }
 		public PACKET_ERROR Error { get; set; }
 		protected Stream? BaseStream;
 
 		protected abstract void Write();
 		protected abstract void Read();
 
-		public int PeekLength(Stream stream)
-		{
-			short len = stream.ReadShort();
-			stream.Position -= sizeof(short);
-			return len;
-		}
-
 		public void Write(Stream stream)
 		{
 			BaseStream = stream;
-			long pos = BaseStream.Position;
-			// Save room for packet length
-			BaseStream.Position += sizeof(uint);
+			Write(Meta?.Count ?? 0);
+			if (Meta?.Count > 0)
+			{
+				foreach (KeyValuePair<string,string> pair in Meta)
+				{
+					Write(pair.Key);
+					Write(pair.Value);
+				}
+			}
 			// Write Error message
 			BaseStream.Write((byte)Error);
 			// Write packet data
 			Write();
-			// Write packet length
-			long curr = BaseStream.Position;
-			BaseStream.Position = pos;
-			Write((uint)(curr - pos));
-			BaseStream.Position = curr;
 			BaseStream = null;
 		}
 
 		public void Read(Stream stream)
 		{
 			BaseStream = stream;
-			long pos = BaseStream.Position;
-			uint length = ReadUInt();
-			long finalPos = pos + length;
+			int metaLen = ReadInt();
+			if (metaLen > 0)
+			{
+				Meta = new Dictionary<string, string>();
+				for (int i = 0; i < metaLen; i++)
+				{
+					string key = ReadString();
+					string value = ReadString();
+					Meta[key] = value;
+				}
+			}
 			Error = (PACKET_ERROR)ReadByte();
 			Read();
-			if (BaseStream.Position != finalPos)
-			{
-				Log.Warn("Misread packet {0}. Read {1} bytes. Should be {2}", 
-					this, BaseStream.Position - pos, length);
-				BaseStream.Position = finalPos;
-			}
 			BaseStream = null;
+		}
+
+		public void AddMeta(string key, string value)
+		{
+			Meta ??= new Dictionary<string, string>();
+			Meta[key] = value;
 		}
 		
 

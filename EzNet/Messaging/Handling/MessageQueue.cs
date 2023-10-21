@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EzNet.Messaging.Handling
 {
-	public class MessageCodec<T> : IMessageCodec
+	public class MessageQueue<T> : IMessageQueue
 		where T : BasePacket, new()
 	{
 		private Action<T, Connection> _callback;
@@ -38,35 +38,12 @@ namespace EzNet.Messaging.Handling
 		
 		public BasePacket CreatePacket() => new T();
 
-		public void Update()
+		public void DequeueMessages()
 		{
-			if (_callback != null && TryDequeue(out var message))
+			if (_callback != null && _receivePacketQueue.TryDequeue(out var message))
 			{
 				_callback.Invoke(message.Message, message.Source);
 			}
-		}
-
-		private bool TryDequeue(out MessageNotification<T> packet) => _receivePacketQueue.TryDequeue(out packet);
-		private bool TryPeek(out MessageNotification<T> packet) => _receivePacketQueue.TryPeek(out packet);
-
-		private async Task<MessageNotification<T>> DequeueAsync()
-		{
-			MessageNotification<T> packet;
-			while (TryDequeue(out packet) == false && Count > 0)
-			{
-				await Task.Yield();
-			}
-			return packet;
-		}
-
-		private async Task<MessageNotification<T>> PeekAsync()
-		{
-			MessageNotification<T> packet;
-			while (TryPeek(out packet) == false && Count > 0)
-			{
-				await Task.Yield();
-			}
-			return packet;
 		}
 	}
 }

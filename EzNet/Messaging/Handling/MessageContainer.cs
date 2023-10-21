@@ -7,26 +7,26 @@ namespace EzNet.Messaging.Handling
 {
 	internal class MessageContainer : IMessageContainer
 	{
-		private readonly ConcurrentDictionary<Type, IMessageCodec> _messageHandlers = new ConcurrentDictionary<Type, IMessageCodec>();
+		private readonly ConcurrentDictionary<Type, IMessageQueue> _messageHandlers = new ConcurrentDictionary<Type, IMessageQueue>();
 
 		public void RegisterMessageType<T>() where T : BasePacket, new() => GetOrCreateMessageHandler<T>();
-		public MessageCodec<T> GetOrCreateMessageHandler<T>()
+		public MessageQueue<T> GetOrCreateMessageHandler<T>()
 			where T : BasePacket, new()
 		{
 			Type type = typeof(T);
-			if (_messageHandlers.TryGetValue(type, out IMessageCodec? handler))
+			if (_messageHandlers.TryGetValue(type, out IMessageQueue? handler))
 			{
-				return ((MessageCodec<T>)handler);
+				return ((MessageQueue<T>)handler);
 			}
-			handler = new MessageCodec<T>();
+			handler = new MessageQueue<T>();
 			_messageHandlers[type] = handler;
-			return (MessageCodec<T>)handler;
+			return (MessageQueue<T>)handler;
 		}
 
 
-		public bool TryGetValue(Type type, out IMessageCodec value) => _messageHandlers.TryGetValue(type, out value);
+		public bool TryGetValue(Type type, out IMessageQueue value) => _messageHandlers.TryGetValue(type, out value);
 		
-		public IEnumerable<IMessageCodec> GetCodecs()
+		public IEnumerable<IMessageQueue> GetMessageQueues()
 		{
 			return _messageHandlers.Values;
 		}

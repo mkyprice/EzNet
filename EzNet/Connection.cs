@@ -33,7 +33,8 @@ namespace EzNet
 			_connection = connection;
 			_connection.OnReceive += ReceiveRaw;
 			_connection.OnDisconnect += OnDisconnect;
-			MessageHandler.Streamer.RegisterByteHandler(ref OnBytesReceived);
+			MessageHandler.Streamer.RegisterMessageReader(ref OnBytesReceived);
+			MessageHandler.Streamer.RegisterByteSender(_connection.Send);
 		}
 
 		/// <summary>
@@ -47,24 +48,15 @@ namespace EzNet
 		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest packet, int timeoutMs = 2000)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
-			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, Send, timeoutMs);
-		
+			=> await MessageHandler.SendAsync<TResponse, TRequest>(packet, timeoutMs);
+
 		/// <summary>
 		/// Send a packet though connection
 		/// </summary>
 		/// <param name="packet"></param>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		public bool Send<T>(T packet)
-			where T : BasePacket
-		{
-			using (MemoryStream ms = new MemoryStream())
-			{
-				PacketExtension.Serialize(ms, packet);
-				byte[] bytes = ms.ToArray();
-				return _connection.Send(bytes);
-			}
-		}
+		public bool Send<T>(T packet) where T : BasePacket => MessageHandler.Streamer.WriteMessage(packet);
 
 		public override void Dispose()
 		{

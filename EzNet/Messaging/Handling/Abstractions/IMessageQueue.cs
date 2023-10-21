@@ -2,7 +2,7 @@
 
 namespace EzNet.Messaging.Handling.Abstractions
 {
-	public interface IMessageCodec
+	public interface IMessageQueue
 	{
 		/// <summary>
 		/// Read a single packet from a stream
@@ -20,6 +20,6 @@ namespace EzNet.Messaging.Handling.Abstractions
 		/// <summary>
 		/// Performs dequeue and events
 		/// </summary>
-		public void Update();
+		public void DequeueMessages();
 	}
 }

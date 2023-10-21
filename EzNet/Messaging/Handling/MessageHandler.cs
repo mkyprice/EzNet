@@ -2,11 +2,8 @@
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
 using EzNet.Messaging.Handling.Utils;
-using EzNet.Messaging.Requests;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,44 +58,34 @@ namespace EzNet.Messaging.Handling
 				return;
 			}
 			ResponseHandler<TRequest, TResponse> responseHandler = new ResponseHandler<TRequest, TResponse>(requestFunc);
-			AddCallback<RequestPacket>(responseHandler.OnRequest);
+			AddCallback<TRequest>(responseHandler.OnRequest);
 			_responseHandlers.Add(responseHandler);
 		}
 
-		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, Func<BasePacket, bool> sendFunc, int timeoutMs = 2000)
+		public async Task<TResponse> SendAsync<TResponse, TRequest>(TRequest request, int timeoutMs = 2000)
 			where TResponse : BasePacket, new()
 			where TRequest : BasePacket, new()
 		{
 			// Build request packet
-			RequestPacket requestPacket = new RequestPacket(request);
+			string requestId = Guid.NewGuid().ToString();
+			request.AddMeta(PacketExtension.REQUEST_ID, requestId);
 			
 			// Receiving
 			TaskCompletionSource<TResponse> taskCompletionSource = new TaskCompletionSource<TResponse>();
-			void ReceiveResponse(ResponsePacket responsePacket, Connection source)
+			void ReceiveResponse(TResponse responsePacket, Connection source)
 			{
 				// Ensure matching IDs
-				if (responsePacket.RequestId == requestPacket.RequestId)
+				if (responsePacket.Meta?.TryGetValue(PacketExtension.REQUEST_ID, out string id) == true && id == requestId)
 				{
-					if (responsePacket.Response is TResponse r)
-					{
-						taskCompletionSource.SetResult(r);
-					}
-					else
-					{
-						Log.Error("Received incorrect response type {0}", responsePacket.Response);
-						taskCompletionSource.SetResult(new TResponse()
-						{
-							Error = PACKET_ERROR.BadResponse
-						});
-					}
+					taskCompletionSource.SetResult(responsePacket);
 				}
 			}
 			// Register response
-			AddCallback<ResponsePacket>(ReceiveResponse);
+			AddCallback<TResponse>(ReceiveResponse);
 			
 			TResponse response;
 			// Send out request
-			if (sendFunc(requestPacket))
+			if (_streamer.WriteMessage(request))
 			{
 				response = await AwaitTaskOrTimeout(taskCompletionSource, timeoutMs);
 				if (response == null)
@@ -121,7 +108,7 @@ namespace EzNet.Messaging.Handling
 			
 			
 			// Cleanup
-			RemoveCallback<ResponsePacket>(ReceiveResponse);
+			RemoveCallback<TResponse>(ReceiveResponse);
 			return response;
 		}
 
@@ -165,9 +152,9 @@ namespace EzNet.Messaging.Handling
 			{
 				while (IsDisposed == false)
 				{
-					foreach (IMessageCodec codec in _container.GetCodecs())
+					foreach (IMessageQueue codec in _container.GetMessageQueues())
 					{
-						codec.Update();
+						codec.DequeueMessages();
 					}
 					await Task.Delay(1);
 				}

@@ -1,10 +1,7 @@
 ﻿using EzNet.Logging;
 using EzNet.Messaging.Extensions;
 using EzNet.Messaging.Handling.Abstractions;
-using EzNet.Utils;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 
 namespace EzNet.Messaging.Handling
@@ -12,18 +9,31 @@ namespace EzNet.Messaging.Handling
 	public class MessageStreamer : IMessageStreamer
 	{
 		private readonly IMessageContainer _container;
+		private Func<byte[], bool> _send;
 
 		public MessageStreamer(IMessageContainer container)
 		{
 			_container = container;
 		}
-		
-		public void RegisterByteHandler(ref Action<ArraySegment<byte>, Connection> callback)
+
+		public bool WriteMessage(BasePacket packet)
+		{
+			using (MemoryStream ms = new MemoryStream())
+			{
+				PacketExtension.Serialize(ms, packet);
+				byte[] bytes = ms.ToArray();
+				return _send(bytes);
+			}
+		}
+		public void RegisterMessageReader(ref Action<ArraySegment<byte>, Connection> callback)
 			=> callback += ReadMessage;
 
-		public void DeregisterByteHandler(ref Action<ArraySegment<byte>, Connection> callback)
+		public void DeregisterMessageReader(ref Action<ArraySegment<byte>, Connection> callback)
 			=> callback -= ReadMessage;
-
+		
+		public void RegisterByteSender(Func<byte[], bool> send) => _send += send;
+		public void DeregisterByteSender(Func<byte[], bool> send) => _send -= send;
+		
 		private void ReadMessage(ArraySegment<byte> segment, Connection source)
 		{
 			if (segment.Array == null)
@@ -32,55 +42,22 @@ namespace EzNet.Messaging.Handling
 				return;
 			}
 
-			MemoryStream ms;
-			if (_buffer != null)
+			using MemoryStream ms = new MemoryStream(segment.Array, segment.Offset, segment.Count);
+			while (ms.Position < ms.Length)
 			{
-				_buffer.Enqueue(segment);
-				if (_buffer.Length == _buffer.Capacity)
+				BasePacket? packet = PacketExtension.Deserialize(ms);
+				if (packet != null)
 				{
-					ms = new MemoryStream(_buffer.GetBuffer());
-					Log.Info("USING BUFFER");
+					if (_container.TryGetValue(packet.GetType(), out IMessageQueue handler))
+					{
+						handler.Enqueue(packet, source);
+					}
 				}
 				else
 				{
 					return;
 				}
 			}
-			else
-			{
-				ms = new MemoryStream(segment.Array, segment.Offset, segment.Count);
-			}
-			while (ms.Position < ms.Length)
-			{
-				if (PacketExtension.TryReadType(ms, out Type type) && 
-				    _container.TryGetValue(type, out IMessageCodec handler))
-				{
-					BasePacket packet = handler.CreatePacket();
-					int length = packet.PeekLength(ms);
-					
-					if (ms.Length != length)
-					{
-						packet.Read(ms);
-						handler.Enqueue(packet, source);
-						_buffer?.Dispose();
-						_buffer = null;
-					}
-					else
-					{
-						_buffer = new ByteBuffer(length);
-						Log.Error("Failed to read packet bc lib dum. Got {0} wanted {1}", ms.Length, length);
-					}
-				}
-				else
-				{
-					Log.Warn("No message handler for packet type {0}. Bytes: {1}", type, ms.Length);
-					// TODO: Add message queue for unsubscribed messages
-					break;
-				}
-			}
-			ms.Dispose();
 		}
-
-		private ByteBuffer? _buffer;
 	}
 }

@@ -1,12 +1,13 @@
 ﻿using EzNet.Logging;
-using EzNet.Messaging.Requests;
+using EzNet.Messaging.Extensions;
 using System;
+using System.Collections.Generic;
 
 namespace EzNet.Messaging.Handling.Utils
 {
 	internal interface IResponseHandler
 	{
-		public void OnRequest(RequestPacket requestPacket, Connection source);
+		public void OnRequest(BasePacket requestPacket, Connection source);
 	}
 	
 	internal class ResponseHandler<TRequest, TResponse> : IResponseHandler
@@ -19,10 +20,10 @@ namespace EzNet.Messaging.Handling.Utils
 			_function = function;
 		}
 		
-		public void OnRequest(RequestPacket requestPacket, Connection source)
+		public void OnRequest(BasePacket requestPacket, Connection source)
 		{
 			// Respond to type request
-			if (requestPacket.Packet is TRequest request)
+			if (requestPacket is TRequest request)
 			{
 				BasePacket response;
 				try
@@ -38,8 +39,8 @@ namespace EzNet.Messaging.Handling.Utils
 						Error = PACKET_ERROR.BadResponse
 					};
 				}
-				ResponsePacket responsePacket = new ResponsePacket(response, requestPacket.RequestId);
-				if (source.Send(responsePacket) == false)
+				response.AddMeta(PacketExtension.REQUEST_ID, requestPacket.Meta[PacketExtension.REQUEST_ID]);
+				if (source.Send(response) == false)
 				{
 					Log.Warn("Failed to send response {0}", response);
 				}
